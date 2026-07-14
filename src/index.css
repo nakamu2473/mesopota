@@ -1,0 +1,479 @@
+:root {
+  --bg: #f5ead8;
+  --panel: #fdf6e9;
+  --ink: #3d2b1f;
+  --ink-soft: #7a6350;
+  --accent: #b3541e;
+  --accent-soft: #e07b39;
+  --guide: #e8dcc8;
+  --border: #d9c9ac;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+  line-height: 1.6;
+}
+
+.cuneiform {
+  font-family: 'Noto Sans Cuneiform', serif;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: var(--panel);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.app-header nav {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.app-header nav a {
+  text-decoration: none;
+  color: var(--ink-soft);
+  padding: 0.15rem 0.3rem;
+}
+
+.app-header nav a.active {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.note {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+/* ホーム */
+.hero {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.hero-glyphs {
+  font-size: 2.6rem;
+  letter-spacing: 0.4rem;
+}
+
+.hero-glyph {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.hero h1 {
+  margin: 0.3rem 0 0;
+  font-size: 2rem;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
+  margin: 1.2rem 0;
+}
+
+.feature-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--ink);
+  text-align: center;
+  transition: transform 0.1s;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+}
+
+.feature-card h2 {
+  margin: 0.3rem 0 0.2rem;
+  font-size: 1.1rem;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.stats {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+/* 習字一覧 */
+.sign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.7rem;
+}
+
+.sign-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  position: relative;
+}
+
+.sign-card-name {
+  font-weight: bold;
+}
+
+.sign-card-value {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.7rem;
+  background: var(--guide);
+  border-radius: 8px;
+  padding: 0 0.4rem;
+}
+
+.badge-master {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* キャンバス */
+.canvas-wrap {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  max-width: 440px;
+  margin: 0.8rem auto;
+}
+
+.canvas-wrap-large {
+  max-width: 560px;
+}
+
+.wedge-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* 習字 */
+.practice-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.practice-head h1 {
+  margin: 0;
+}
+
+.sign-value {
+  font-weight: normal;
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+.sign-meaning {
+  font-weight: normal;
+  font-size: 0.95rem;
+  margin-left: 0.4rem;
+}
+
+.practice-message {
+  text-align: center;
+  min-height: 1.6em;
+}
+
+.practice-result {
+  text-align: center;
+}
+
+.score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.target-marker {
+  fill: none;
+  stroke: var(--accent-soft);
+  stroke-width: 2;
+  animation: pulse 1s infinite;
+}
+
+.target-arrow {
+  stroke: var(--accent-soft);
+  stroke-width: 1.5;
+}
+
+.target-arrowhead {
+  fill: var(--accent-soft);
+}
+
+.hint-wedge {
+  fill: none;
+  stroke: #2e8b57;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.progress-dots {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--guide);
+  margin: 0 3px;
+}
+
+.dot-done {
+  background: var(--ink);
+}
+
+.dot-now {
+  background: var(--accent-soft);
+}
+
+/* ボタン */
+.btn-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0.8rem 0;
+}
+
+button,
+.btn {
+  font: inherit;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button.primary,
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* 読み取り */
+.candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.candidate {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.candidate-glyph {
+  font-size: 1.8rem;
+}
+
+.candidate-body {
+  flex: 1;
+}
+
+.confidence {
+  width: 110px;
+  background: var(--guide);
+  border-radius: 6px;
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+}
+
+.confidence-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--accent-soft);
+}
+
+.confidence-num {
+  position: relative;
+  font-size: 0.72rem;
+  padding-left: 6px;
+}
+
+/* 変換 */
+.convert-input {
+  font: inherit;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.convert-output {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.convert-result {
+  font-size: 2.4rem;
+  line-height: 1.4;
+  word-break: break-all;
+  margin-bottom: 0.5rem;
+}
+
+.mora-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mora-item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.4rem 0.7rem;
+  text-align: center;
+  min-width: 64px;
+}
+
+.mora-kana {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.mora-glyph {
+  font-size: 1.7rem;
+}
+
+.mora-reading {
+  font-size: 0.78rem;
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.mora-reading a {
+  text-decoration: none;
+}
+
+.mora-skipped,
+.mora-unknown {
+  opacity: 0.75;
+}
+
+.mora-unknown {
+  border-color: #c0392b;
+}
+
+.mora-note {
+  font-size: 0.72rem;
+  max-width: 90px;
+}
+
+/* 文字詳細 */
+.detail-glyphs {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.detail-glyph {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.detail-font {
+  font-size: 7rem;
+  line-height: 1.1;
+  display: block;
+}
+
+.caption {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
