@@ -3,8 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>楔形文字手書き — P2</title>
+<title>楔形文字手書き — P3</title>
 <style>
+  @font-face {
+    font-family: "Noto Sans Cuneiform";
+    src: url("fonts/NotoSansCuneiform.woff2") format("woff2");
+    font-display: swap;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
   body {
@@ -15,6 +20,7 @@
     color: #3d2f1f;
     overscroll-behavior: none;
   }
+  .cune { font-family: "Noto Sans Cuneiform", sans-serif; }
   header {
     padding: 8px 14px;
     background: #5c4a33;
@@ -35,8 +41,53 @@
     padding: 12px;
     overflow: auto;
   }
+  #left, #right {
+    width: min(92vw, 420px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  /* --- 出題チップ --- */
+  #chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    font: inherit;
+    border: none;
+    border-radius: 4px;
+    background: rgba(232, 220, 200, 0.5);
+    color: #3d2f1f;
+    cursor: pointer;
+    padding: 4px 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 44px;
+  }
+  .chip .g { font-family: "Noto Sans Cuneiform", sans-serif; font-size: 22px; line-height: 1.2; }
+  .chip .r { font-size: 10px; opacity: 0.7; }
+  .chip.sel { background: #5c4a33; color: #e8dcc8; }
+  /* --- お手本カード --- */
+  #sign-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: rgba(232, 220, 200, 0.5);
+    border-radius: 4px;
+    padding: 10px 14px;
+    min-height: 96px;
+  }
+  #sign-card .glyph {
+    font-family: "Noto Sans Cuneiform", sans-serif;
+    font-size: 64px;
+    line-height: 1;
+    min-width: 76px;
+    text-align: center;
+  }
+  #sign-card .info { font-size: 13px; display: flex; flex-direction: column; gap: 2px; }
+  #sign-card .rd { font-size: 16px; font-weight: 700; }
+  #sign-card .uni { font-size: 10px; opacity: 0.6; }
+  /* --- キャンバス --- */
   #board {
-    width: min(92vw, 52vh, 420px);
+    width: 100%;
     aspect-ratio: 1;
     background: #c8a878;
     border: 2px solid #5c4a33;
@@ -48,14 +99,15 @@
     cursor: crosshair;
     display: block;
   }
-  #panel {
-    width: min(92vw, 420px);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  #ghost {
+    font-family: "Noto Sans Cuneiform", sans-serif;
+    fill: #3d2f1f;
+    opacity: 0.15;
+    pointer-events: none;
   }
+  #trace-row { font-size: 13px; display: flex; align-items: center; gap: 6px; }
   #toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
-  button {
+  button.tb {
     font: inherit;
     font-size: 14px;
     padding: 8px 14px;
@@ -65,10 +117,10 @@
     color: #e8dcc8;
     cursor: pointer;
   }
-  button:disabled { opacity: 0.4; cursor: default; }
+  button.tb:disabled { opacity: 0.4; cursor: default; }
   #stroke-list {
     list-style: none;
-    max-height: 140px;
+    max-height: 120px;
     overflow-y: auto;
     background: rgba(232, 220, 200, 0.5);
     border-radius: 4px;
@@ -89,46 +141,76 @@
     gap: 12px;
   }
   #warn { color: #f0b0a0; }
-  @media (min-width: 700px) {
+  @media (min-width: 820px) {
     main { flex-direction: row; justify-content: center; align-items: flex-start; }
-    #board { width: min(60vh, 420px); }
-    #panel { width: 240px; }
-    #stroke-list { max-height: min(60vh, 336px); }
+    #left { width: 320px; }
+    #right { width: min(60vh, 420px); }
+    #stroke-list { max-height: 200px; }
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>𒀸 楔形文字手書き P2</h1>
-  <span class="hint">ドラッグ=楔を打つ（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン</span>
+  <h1>𒀸 楔形文字手書き P3</h1>
+  <span class="hint">お手本を選んで書く。ドラッグ=楔（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン</span>
 </header>
 <main>
-  <svg id="board" viewBox="0 0 300 300"><g id="strokes-layer"></g></svg>
-  <div id="panel">
+  <div id="left">
+    <div id="chips"></div>
+    <div id="sign-card"></div>
+  </div>
+  <div id="right">
+    <svg id="board" viewBox="0 0 300 300">
+      <text id="ghost" font-size="100" text-anchor="middle"></text>
+      <g id="strokes-layer"></g>
+    </svg>
+    <label id="trace-row">
+      <input type="checkbox" id="trace-toggle" checked>
+      お手本を薄く重ねる（なぞり書き）
+    </label>
     <div id="toolbar">
-      <button id="btn-undo" disabled>↩ undo</button>
-      <button id="btn-clear" disabled>全クリア</button>
-      <button id="btn-save" disabled>JSON保存</button>
-      <button id="btn-load">JSON読込</button>
+      <button class="tb" id="btn-undo" disabled>↩ undo</button>
+      <button class="tb" id="btn-clear" disabled>全クリア</button>
+      <button class="tb" id="btn-save" disabled>JSON保存</button>
+      <button class="tb" id="btn-load">JSON読込</button>
       <input type="file" id="file-input" accept=".json,application/json" hidden>
     </div>
     <ol id="stroke-list"></ol>
   </div>
 </main>
 <footer>
-  <span id="status">粘土板をドラッグしてください</span>
+  <span id="status">お手本を選ぶか、そのままドラッグしてください</span>
   <span id="warn"></span>
 </footer>
 <script>
 "use strict";
 
+// ---- 出題リスト（設計メモ 5: 手入力で追加していく方式）----
+// 音価・意味は基礎資料で確認済みの頻出サイン。講座で習ったら差し替え/追記する。
+const SIGNS = [
+  { char: "𒀸", cp: "U+12038", name: "AŠ",    reading: "aš",         meaning: "横楔1本だけの最も単純な字。数の「1」にも使う" },
+  { char: "𒁹", cp: "U+12079", name: "DIŠ",   reading: "diš",        meaning: "縦楔1本。数の「1」・人名の前に置く限定符" },
+  { char: "𒌋", cp: "U+1230B", name: "U",     reading: "u",          meaning: "ウィンケルハーケン1つ。数の「10」" },
+  { char: "𒀀", cp: "U+12000", name: "A",     reading: "a",          meaning: "水。最頻出の字のひとつ" },
+  { char: "𒀭", cp: "U+1202D", name: "AN",    reading: "an / diĝir", meaning: "天・神。神名の前の限定符（DINGIR）" },
+  { char: "𒈬", cp: "U+1222C", name: "MU",    reading: "mu",         meaning: "名前・年" },
+  { char: "𒆠", cp: "U+121A0", name: "KI",    reading: "ki",         meaning: "大地・場所。地名の後ろの限定符" },
+  { char: "𒌓", cp: "U+12313", name: "UD",    reading: "ud / utu",   meaning: "太陽・日。太陽神ウトゥ" },
+  { char: "𒅗", cp: "U+12157", name: "KA",    reading: "ka",         meaning: "口" },
+  { char: "𒅆", cp: "U+12146", name: "IGI",   reading: "igi",        meaning: "目・見る" },
+  { char: "𒄑", cp: "U+12111", name: "GIŠ",   reading: "giš",        meaning: "木。木製品の前の限定符" },
+  { char: "𒃲", cp: "U+120F2", name: "GAL",   reading: "gal",        meaning: "大きい" },
+  { char: "𒂍", cp: "U+1208D", name: "E₂",    reading: "e₂",         meaning: "家・神殿" },
+  { char: "𒊭", cp: "U+122AD", name: "ŠA",    reading: "ša",         meaning: "音節「シャ」。アッカド語で頻出" },
+  { char: "𒈗", cp: "U+12217", name: "LUGAL", reading: "lugal",      meaning: "王。「大きい人（LU₂.GAL）」に由来" },
+];
+
 // ---- 定数 ----
-// P2から座標は 300x300 の viewBox 単位に正規化（設計メモ 4）。
-// 保存した Glyph JSON が端末の画面サイズに依存しない。
 const VIEW = 300;
-const TAP_THRESHOLD = 12;   // viewBox単位。未満のドラッグ = ウィンケルハーケン
+const TAP_THRESHOLD = 12;
 const INK = "#3d2f1f";
 const WH_SIZE = 12;
+const GHOST_FIT = 240; // お手本をキャンバス内に収める最大サイズ
 
 const TYPE_LABEL = {
   vertical: "縦楔",
@@ -137,12 +219,17 @@ const TYPE_LABEL = {
   winkelhaken: "ウィンケルハーケン",
 };
 
-// ---- 状態（設計メモ 2.2 Glyph）----
+// ---- 状態 ----
 const glyph = { strokes: [] };
+let currentSign = null; // SIGNS の要素 or null（自由練習）
 let dragStart = null;
 
 const board = document.getElementById("board");
 const strokesLayer = document.getElementById("strokes-layer");
+const ghostEl = document.getElementById("ghost");
+const chipsEl = document.getElementById("chips");
+const cardEl = document.getElementById("sign-card");
+const traceToggle = document.getElementById("trace-toggle");
 const listEl = document.getElementById("stroke-list");
 const statusEl = document.getElementById("status");
 const warnEl = document.getElementById("warn");
@@ -154,6 +241,65 @@ const fileInput = document.getElementById("file-input");
 const SVG_NS = "http://www.w3.org/2000/svg";
 let previewEl = null;
 let warnTimer = null;
+
+// ---- 出題 UI ----
+function buildChips() {
+  const free = document.createElement("button");
+  free.className = "chip";
+  free.innerHTML = `<span class="g">✏</span><span class="r">自由</span>`;
+  free.addEventListener("click", () => selectSign(null));
+  chipsEl.appendChild(free);
+  for (const sign of SIGNS) {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.innerHTML = `<span class="g">${sign.char}</span><span class="r">${sign.reading}</span>`;
+    b.addEventListener("click", () => selectSign(sign));
+    chipsEl.appendChild(b);
+  }
+}
+
+function selectSign(sign) {
+  currentSign = sign;
+  if (sign) glyph.targetChar = sign.char;
+  else delete glyph.targetChar;
+  [...chipsEl.children].forEach((b, i) => {
+    b.classList.toggle("sel", sign ? SIGNS[i - 1] === sign : i === 0);
+  });
+  renderCard();
+  renderGhost();
+}
+
+function renderCard() {
+  if (!currentSign) {
+    cardEl.innerHTML = `<div class="info"><div class="rd">自由練習</div>
+      <div>お手本なしで楔を打つモードです。上の字を選ぶと練習モードになります。</div></div>`;
+    return;
+  }
+  const s = currentSign;
+  cardEl.innerHTML = `
+    <div class="glyph">${s.char}</div>
+    <div class="info">
+      <div class="rd">${s.name} <small>[${s.reading}]</small></div>
+      <div>${s.meaning}</div>
+      <div class="uni">${s.cp} CUNEIFORM SIGN ${s.name === "E₂" ? "E2" : s.name.replace("Š", "SH")}</div>
+    </div>`;
+}
+
+// お手本をキャンバス中央に薄く表示（フォント読み込み後にサイズを実測して収める）
+function renderGhost() {
+  const show = currentSign && traceToggle.checked;
+  ghostEl.textContent = show ? currentSign.char : "";
+  if (!show) return;
+  ghostEl.removeAttribute("transform");
+  const bb = ghostEl.getBBox();
+  if (bb.width === 0) return;
+  const s = Math.min(GHOST_FIT / bb.width, GHOST_FIT / bb.height);
+  const cx = bb.x + bb.width / 2, cy = bb.y + bb.height / 2;
+  ghostEl.setAttribute("transform",
+    `translate(${VIEW / 2} ${VIEW / 2}) scale(${s.toFixed(3)}) translate(${(-cx).toFixed(1)} ${(-cy).toFixed(1)})`);
+}
+
+traceToggle.addEventListener("change", renderGhost);
 
 // ---- 分類（設計メモ 3.2）----
 function classify(dx, dy, len) {
@@ -171,7 +317,7 @@ function wedgePoints(x, y, ex, ey) {
   const len = Math.hypot(dx, dy);
   const ux = dx / len, uy = dy / len;
   const px = -uy, py = ux;
-  const hw = Math.min(11, Math.max(5.5, len * 0.16)); // 頭の半幅（長さ連動+上下限）
+  const hw = Math.min(11, Math.max(5.5, len * 0.16));
   const hl = hw * 1.7;
   const tw = Math.max(1.2, hw * 0.28);
   const pts = [
@@ -202,14 +348,12 @@ function makeStrokeEl(type, x, y, ex, ey) {
   return el;
 }
 
-// Stroke は x/y/angle/length しか持たないので終点は復元する
-// （JSON読込やundo後の再描画をデータだけから行うため）
 function strokeEnd(s) {
   const rad = s.angle * Math.PI / 180;
   return { ex: s.x + Math.cos(rad) * s.length, ey: s.y + Math.sin(rad) * s.length };
 }
 
-// ---- 再描画（データ → 画面。undo/クリア/読込はすべてここを通る）----
+// ---- 再描画（データ → 画面）----
 function render() {
   strokesLayer.innerHTML = "";
   listEl.innerHTML = "";
@@ -227,7 +371,7 @@ function render() {
   }
   const n = glyph.strokes.length;
   btnUndo.disabled = btnClear.disabled = btnSave.disabled = n === 0;
-  if (n === 0) statusEl.textContent = "粘土板をドラッグしてください";
+  if (n === 0) statusEl.textContent = "お手本を選ぶか、そのままドラッグしてください";
 }
 
 // ---- 入力（Pointer Events）----
@@ -326,12 +470,13 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// ---- JSON 書き出し / 読み込み（設計メモ 4）----
+// ---- JSON 書き出し / 読み込み ----
 btnSave.addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(glyph, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `glyph-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  const label = currentSign ? currentSign.name.replace("₂", "2") : "free";
+  a.download = `glyph-${label}-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   statusEl.textContent = `JSON保存: ${glyph.strokes.length}打`;
@@ -361,11 +506,12 @@ function loadGlyph(data) {
     if (![s.x, s.y, s.angle, s.length].every(Number.isFinite)) {
       throw new Error(`${i + 1}番目: x/y/angle/length が不正です`);
     }
-    return { ...s, order: i + 1 }; // order は読み込み順で振り直す
+    return { ...s, order: i + 1 };
   });
   glyph.strokes.length = 0;
   glyph.strokes.push(...strokes);
-  if ("targetChar" in data) glyph.targetChar = data.targetChar; // P3以降用に保持
+  // targetChar が出題リストにあればお手本も復元する
+  selectSign(SIGNS.find(sg => sg.char === data.targetChar) || null);
   render();
 }
 
@@ -375,7 +521,11 @@ function showWarn(msg) {
   warnTimer = setTimeout(() => { warnEl.textContent = ""; }, 2500);
 }
 
+buildChips();
+selectSign(null);
 render();
+// フォント読み込み完了後にお手本サイズを実測し直す
+document.fonts.ready.then(renderGhost);
 </script>
 </body>
 </html>
