@@ -11,7 +11,7 @@
     font-display: swap;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
+  html, body { height: 100%; overscroll-behavior: none; }
   body {
     display: flex;
     flex-direction: column;
@@ -381,6 +381,12 @@ function localPos(e) {
     x: (e.clientX - r.left) * VIEW / r.width,
     y: (e.clientY - r.top) * VIEW / r.height,
   };
+}
+
+// touch-action: none が効かない環境でも縦ドラッグがスクロールや
+// pull-to-refresh に化けないよう、キャンバス上のタッチは既定動作ごと止める
+for (const ev of ["touchstart", "touchmove"]) {
+  board.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
 }
 
 board.addEventListener("pointerdown", (e) => {
