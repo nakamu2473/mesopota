@@ -21,17 +21,6 @@
     overscroll-behavior: none;
   }
   .cune { font-family: "Noto Sans Cuneiform", sans-serif; }
-  header {
-    padding: 8px 14px;
-    background: #5c4a33;
-    color: #e8dcc8;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  header h1 { font-size: 16px; font-weight: 600; }
-  header .hint { font-size: 11px; opacity: 0.75; }
   main {
     flex: 1;
     display: flex;
@@ -47,8 +36,14 @@
     flex-direction: column;
     gap: 8px;
   }
-  /* --- 出題チップ --- */
-  #chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  /* --- 出題チップ（モバイルは横スクロール1行で省スペース） --- */
+  #chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
   .chip {
     font: inherit;
     border: none;
@@ -61,6 +56,7 @@
     flex-direction: column;
     align-items: center;
     min-width: 44px;
+    flex-shrink: 0;
   }
   .chip .g { font-family: "Noto Sans Cuneiform", sans-serif; font-size: 22px; line-height: 1.2; }
   .chip .r { font-size: 10px; opacity: 0.7; }
@@ -86,6 +82,23 @@
   #sign-card .rd { font-size: 16px; font-weight: 700; }
   #sign-card .uni { font-size: 10px; opacity: 0.6; }
   /* --- キャンバス --- */
+  #board-wrap { position: relative; width: 100%; }
+  .fab {
+    position: absolute;
+    top: 8px;
+    font: inherit;
+    font-size: 14px;
+    padding: 7px 11px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(92, 74, 51, 0.8);
+    color: #e8dcc8;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .fab:disabled { opacity: 0.35; cursor: default; }
+  #btn-undo { right: 82px; }
+  #btn-clear { right: 8px; }
   #board {
     width: 100%;
     aspect-ratio: 1;
@@ -143,34 +156,33 @@
   #warn { color: #f0b0a0; }
   @media (min-width: 820px) {
     main { flex-direction: row; justify-content: center; align-items: flex-start; }
-    #left { width: 320px; }
+    #left { width: 340px; }
     #right { width: min(60vh, 420px); }
     #stroke-list { max-height: 200px; }
+    #chips { flex-wrap: wrap; overflow-x: visible; }
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>𒀸 楔形文字手書き P3</h1>
-  <span class="hint">お手本を選んで書く。ドラッグ=楔（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン</span>
-</header>
 <main>
   <div id="left">
     <div id="chips"></div>
     <div id="sign-card"></div>
   </div>
   <div id="right">
-    <svg id="board" viewBox="0 0 300 300">
-      <text id="ghost" font-size="100" text-anchor="middle"></text>
-      <g id="strokes-layer"></g>
-    </svg>
+    <div id="board-wrap">
+      <svg id="board" viewBox="0 0 300 300">
+        <text id="ghost" font-size="100" text-anchor="middle"></text>
+        <g id="strokes-layer"></g>
+      </svg>
+      <button class="fab" id="btn-undo" disabled>↩ undo</button>
+      <button class="fab" id="btn-clear" disabled>クリア</button>
+    </div>
     <label id="trace-row">
       <input type="checkbox" id="trace-toggle" checked>
       お手本を薄く重ねる（なぞり書き）
     </label>
     <div id="toolbar">
-      <button class="tb" id="btn-undo" disabled>↩ undo</button>
-      <button class="tb" id="btn-clear" disabled>全クリア</button>
       <button class="tb" id="btn-save" disabled>JSON保存</button>
       <button class="tb" id="btn-load">JSON読込</button>
       <input type="file" id="file-input" accept=".json,application/json" hidden>
@@ -203,6 +215,28 @@ const SIGNS = [
   { char: "𒂍", cp: "U+1208D", name: "E₂",    reading: "e₂",         meaning: "家・神殿" },
   { char: "𒊭", cp: "U+122AD", name: "ŠA",    reading: "ša",         meaning: "音節「シャ」。アッカド語で頻出" },
   { char: "𒈗", cp: "U+12217", name: "LUGAL", reading: "lugal",      meaning: "王。「大きい人（LU₂.GAL）」に由来" },
+  // --- 追加語彙 ---
+  { char: "𒂗", cp: "U+12097", name: "EN",    reading: "en",         meaning: "主・領主。神殿長エン" },
+  { char: "𒆳", cp: "U+121B3", name: "KUR",   reading: "kur",        meaning: "山・異国の地" },
+  { char: "𒇽", cp: "U+121FD", name: "LU₂",   reading: "lu₂",        meaning: "人・男。職業名の前の限定符" },
+  { char: "𒊕", cp: "U+12295", name: "SAG",   reading: "sag",        meaning: "頭" },
+  { char: "𒊺", cp: "U+122BA", name: "ŠE",    reading: "še",         meaning: "大麦・穀物" },
+  { char: "𒋗", cp: "U+122D7", name: "ŠU",    reading: "šu",         meaning: "手" },
+  { char: "𒋾", cp: "U+122FE", name: "TI",    reading: "ti",         meaning: "矢。「生きる（til₃）」にも使う" },
+  { char: "𒌨", cp: "U+12328", name: "UR",    reading: "ur",         meaning: "犬・獣" },
+  { char: "𒁺", cp: "U+1207A", name: "DU",    reading: "du",         meaning: "行く。足の形に由来" },
+  { char: "𒄀", cp: "U+12100", name: "GI",    reading: "gi",         meaning: "葦。楔を書く葦ペンの材料" },
+  { char: "𒊩", cp: "U+122A9", name: "SAL",   reading: "sal / munus", meaning: "女性。女性名の限定符" },
+  { char: "𒌉", cp: "U+12309", name: "TUR",   reading: "tur / dumu", meaning: "小さい・子。DUMU=息子" },
+  // --- 追加音節 ---
+  { char: "𒁀", cp: "U+12040", name: "BA",    reading: "ba",         meaning: "音節「バ」。「分け与える」" },
+  { char: "𒈠", cp: "U+12220", name: "MA",    reading: "ma",         meaning: "音節「マ」" },
+  { char: "𒈨", cp: "U+12228", name: "ME",    reading: "me",         meaning: "音節「メ」。神々の力「メ」" },
+  { char: "𒈾", cp: "U+1223E", name: "NA",    reading: "na",         meaning: "音節「ナ」" },
+  { char: "𒉌", cp: "U+1224C", name: "NI",    reading: "ni",         meaning: "音節「ニ」。油（i₃）にも使う" },
+  { char: "𒊏", cp: "U+1228F", name: "RA",    reading: "ra",         meaning: "音節「ラ」" },
+  { char: "𒋫", cp: "U+122EB", name: "TA",    reading: "ta",         meaning: "音節「タ」。「〜から」" },
+  { char: "𒍪", cp: "U+1236A", name: "ZU",    reading: "zu",         meaning: "知る。音節「ズ」" },
 ];
 
 // ---- 定数 ----
@@ -272,7 +306,7 @@ function selectSign(sign) {
 function renderCard() {
   if (!currentSign) {
     cardEl.innerHTML = `<div class="info"><div class="rd">自由練習</div>
-      <div>お手本なしで楔を打つモードです。上の字を選ぶと練習モードになります。</div></div>`;
+      <div>ドラッグ=楔を打つ（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン。上の字を選ぶと練習モードになります。</div></div>`;
     return;
   }
   const s = currentSign;
@@ -281,7 +315,7 @@ function renderCard() {
     <div class="info">
       <div class="rd">${s.name} <small>[${s.reading}]</small></div>
       <div>${s.meaning}</div>
-      <div class="uni">${s.cp} CUNEIFORM SIGN ${s.name === "E₂" ? "E2" : s.name.replace("Š", "SH")}</div>
+      <div class="uni">${s.cp} CUNEIFORM SIGN ${s.name.replace(/Š/g, "SH").replace(/₂/g, "2")}</div>
     </div>`;
 }
 
