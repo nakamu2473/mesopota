@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>楔形文字手書き — P1</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
+    background: #8a7355;
+    color: #3d2f1f;
+    overscroll-behavior: none;
+  }
+  header {
+    padding: 8px 14px;
+    background: #5c4a33;
+    color: #e8dcc8;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header h1 { font-size: 16px; font-weight: 600; }
+  header .hint { font-size: 11px; opacity: 0.75; }
+  #board {
+    flex: 1;
+    width: 100%;
+    background: #c8a878;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    cursor: crosshair;
+    display: block;
+  }
+  footer {
+    padding: 6px 14px;
+    background: #5c4a33;
+    color: #e8dcc8;
+    font-size: 13px;
+    min-height: 30px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  #warn { color: #f0b0a0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>𒀸 楔形文字手書き P1</h1>
+  <span class="hint">ドラッグ=楔を打つ（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン</span>
+</header>
+<svg id="board"></svg>
+<footer>
+  <span id="status">粘土板をドラッグしてください</span>
+  <span id="warn"></span>
+</footer>
+<script>
+"use strict";
+
+// ---- 定数（設計メモ 3.2 初期値。あとで調整前提）----
+const TAP_THRESHOLD = 15;   // px 未満のドラッグ = ウィンケルハーケン
+const INK = "#3d2f1f";      // P1 は単色シルエット
+const WH_SIZE = 16;         // ウィンケルハーケンの腕の長さ
+
+const TYPE_LABEL = {
+  vertical: "縦楔",
+  horizontal: "横楔",
+  oblique: "斜め楔",
+  winkelhaken: "ウィンケルハーケン",
+};
+
+// ---- 状態 ----
+// Glyph（設計メモ 2.2）。order / angle / length は生データのまま保持し、
+// P4 の書き順判定でも過去データをそのまま採点できるようにする。
+const glyph = { strokes: [] };
+let dragStart = null;   // {x, y} pointerdown の位置 = 楔の頭
+
+const board = document.getElementById("board");
+const statusEl = document.getElementById("status");
+const warnEl = document.getElementById("warn");
+const SVG_NS = "http://www.w3.org/2000/svg";
+let previewEl = null;
+let warnTimer = null;
+
+// ---- 分類（設計メモ 3.2）----
+// 戻り値: type 文字列 / 逆方向ドラッグは null（無効）
+function classify(dx, dy, len) {
+  if (len < TAP_THRESHOLD) return "winkelhaken";
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI; // 画面座標: 下方向が +90°
+  if (angle >= -22.5 && angle < 22.5) return "horizontal";
+  if (angle >= 22.5 && angle < 67.5) return "oblique";
+  if (angle >= 67.5 && angle <= 112.5) return "vertical";
+  return null; // 右→左・下→上などは葦ペンでは打てない方向
+}
+
+// ---- 描画（設計メモ 3.3: 三角形の頭 + 先細りの尾）----
+function wedgePoints(x, y, ex, ey) {
+  const dx = ex - x, dy = ey - y;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len, uy = dy / len;   // 進行方向
+  const px = -uy, py = ux;              // 垂直方向
+  const hw = Math.min(14, Math.max(7, len * 0.16)); // 頭の半幅（長さ連動+上下限）
+  const hl = hw * 1.7;                              // 頭の奥行き
+  const tw = Math.max(1.5, hw * 0.28);              // 尾の付け根の半幅
+  const pts = [
+    [x + px * hw, y + py * hw],                     // 頭の底辺（左右）
+    [x - px * hw, y - py * hw],
+    [x + ux * hl - px * tw, y + uy * hl - py * tw], // 尾の付け根
+    [ex, ey],                                       // 尾の先端
+    [x + ux * hl + px * tw, y + uy * hl + py * tw],
+  ];
+  return pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+}
+
+function makeStrokeEl(type, x, y, ex, ey) {
+  if (type === "winkelhaken") {
+    // 頭のみ・尾なしの「く」の字（三角2辺）
+    const s = WH_SIZE;
+    const el = document.createElementNS(SVG_NS, "path");
+    el.setAttribute("d",
+      `M ${x + s} ${y - s * 0.8} L ${x} ${y} L ${x + s} ${y + s * 0.8}`);
+    el.setAttribute("fill", "none");
+    el.setAttribute("stroke", INK);
+    el.setAttribute("stroke-width", "7");
+    el.setAttribute("stroke-linejoin", "miter");
+    return el;
+  }
+  const el = document.createElementNS(SVG_NS, "polygon");
+  el.setAttribute("points", wedgePoints(x, y, ex, ey));
+  el.setAttribute("fill", INK);
+  return el;
+}
+
+// ---- 入力（Pointer Events で統一）----
+function localPos(e) {
+  const r = board.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+board.addEventListener("pointerdown", (e) => {
+  board.setPointerCapture(e.pointerId);
+  dragStart = localPos(e);
+});
+
+board.addEventListener("pointermove", (e) => {
+  if (!dragStart) return;
+  const p = localPos(e);
+  const dx = p.x - dragStart.x, dy = p.y - dragStart.y;
+  const len = Math.hypot(dx, dy);
+  const type = classify(dx, dy, len);
+
+  if (previewEl) previewEl.remove();
+  if (type) {
+    previewEl = makeStrokeEl(type, dragStart.x, dragStart.y, p.x, p.y);
+    previewEl.setAttribute("opacity", "0.35");
+  } else {
+    // 無効方向はプレビューを細い赤線にして「打てない」を体で伝える
+    previewEl = document.createElementNS(SVG_NS, "line");
+    previewEl.setAttribute("x1", dragStart.x);
+    previewEl.setAttribute("y1", dragStart.y);
+    previewEl.setAttribute("x2", p.x);
+    previewEl.setAttribute("y2", p.y);
+    previewEl.setAttribute("stroke", "#a04030");
+    previewEl.setAttribute("stroke-width", "2");
+    previewEl.setAttribute("stroke-dasharray", "4 4");
+  }
+  board.appendChild(previewEl);
+});
+
+function endDrag(e) {
+  if (!dragStart) return;
+  const start = dragStart;
+  dragStart = null;
+  if (previewEl) { previewEl.remove(); previewEl = null; }
+  if (e.type === "pointercancel") return;
+
+  const p = localPos(e);
+  const dx = p.x - start.x, dy = p.y - start.y;
+  const len = Math.hypot(dx, dy);
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  const type = classify(dx, dy, len);
+
+  if (!type) {
+    showWarn("⚠ 楔は 左→右・上→下・左上→右下 にしか打てません");
+    return;
+  }
+
+  board.appendChild(makeStrokeEl(type, start.x, start.y, p.x, p.y));
+  glyph.strokes.push({
+    type,
+    x: start.x,
+    y: start.y,
+    angle: Math.round(angle * 10) / 10,
+    length: Math.round(len * 10) / 10,
+    order: glyph.strokes.length + 1,
+    timestamp: Date.now(),
+  });
+
+  const s = glyph.strokes[glyph.strokes.length - 1];
+  statusEl.textContent = type === "winkelhaken"
+    ? `${s.order}打目: ${TYPE_LABEL[type]}`
+    : `${s.order}打目: ${TYPE_LABEL[type]} (${s.angle}°, ${s.length}px)`;
+}
+
+board.addEventListener("pointerup", endDrag);
+board.addEventListener("pointercancel", endDrag);
+board.addEventListener("contextmenu", (e) => e.preventDefault());
+
+function showWarn(msg) {
+  warnEl.textContent = msg;
+  clearTimeout(warnTimer);
+  warnTimer = setTimeout(() => { warnEl.textContent = ""; }, 2000);
+}
+</script>
+</body>
+</html>
