@@ -177,6 +177,7 @@
     line-height: 1.7;
   }
   .note-card ul { padding-left: 1.3em; }
+  .note-card .cune { font-size: 19px; }
   .caveat { font-size: 11px; opacity: 0.75; }
   #wedge-demos { display: flex; gap: 8px; flex-wrap: wrap; }
   .demo-box {
@@ -322,6 +323,14 @@
   <section id="tab-read" hidden class="panel">
     <div class="note-card">習った字だけでできた短い句・称号です。まず自力で読んでからタップで答え合わせ。</div>
     <div id="read-cards"></div>
+    <h2>数の読み方</h2>
+    <div class="note-card">
+      <span class="cune">𒁹</span>=1、<span class="cune">𒁹𒁹𒁹</span>=3、
+      <span class="cune">𒌋</span>=10、<span class="cune">𒌋𒁹</span>=11、
+      <span class="cune">𒌋𒌋𒁹𒁹𒁹</span>=23。
+      1は縦楔、10はウィンケルハーケンで、数えたいだけ打ちます。
+      <div class="caveat">シュメールの数は60進法。大きな数では <span class="cune">𒁹</span> が60を表すこともあり、位取りは文脈で判断します。</div>
+    </div>
   </section>
 </main>
 <footer>
@@ -370,6 +379,15 @@ const SIGNS = [
   { char: "𒊏", cp: "U+1228F", name: "RA",    reading: "ra",         meaning: "音節「ラ」" },
   { char: "𒋫", cp: "U+122EB", name: "TA",    reading: "ta",         meaning: "音節「タ」。「〜から」" },
   { char: "𒍪", cp: "U+1236A", name: "ZU",    reading: "zu",         meaning: "知る。音節「ズ」" },
+  // --- 家族・神・もの ---
+  { char: "𒂼", cp: "U+120BC", name: "AMA",   reading: "ama",        meaning: "母" },
+  { char: "𒁮", cp: "U+1206E", name: "DAM",   reading: "dam",        meaning: "配偶者（夫・妻）" },
+  { char: "𒎏", cp: "U+1238F", name: "NIN",   reading: "nin",        meaning: "女主人・女王。女神の名によく入る" },
+  { char: "𒈤", cp: "U+12224", name: "MAH",   reading: "mah",        meaning: "気高い・偉大な" },
+  { char: "𒆬", cp: "U+121AC", name: "KU₃",   reading: "ku₃",        meaning: "輝く・聖なる。銀(KU₃.UD)や金(KU₃.GI)の要素" },
+  { char: "𒄞", cp: "U+1211E", name: "GUD",   reading: "gu₄",        meaning: "牛" },
+  { char: "𒆤", cp: "U+121A4", name: "KID",   reading: "kid / lil₂", meaning: "風(lil₂)。エンリル(EN.LIL₂)の後半の字" },
+  { char: "𒈹", cp: "U+12239", name: "MUŠ₃",  reading: "muš₃ / inanna", meaning: "女神イナンナを表す字" },
 ];
 
 // ---- 単語帳（出題35字だけで書ける実在の語）----
@@ -384,6 +402,24 @@ const WORDS = [
   { chars: "𒀀𒁀",   translit: "a-ba",        meaning: "だれ？（疑問詞）" },
   { chars: "𒀀𒈾",   translit: "a-na",        meaning: "なに？（疑問詞）", note: "アッカド語では ana「〜へ」" },
   { chars: "𒈗𒃲",   translit: "lugal gal",   meaning: "偉大な王", note: "王碑文の定型句" },
+  // --- 神々 ---
+  { chars: "𒀭𒂗𒆠", translit: "ᵈen-ki",      meaning: "エンキ神（水と知恵の神）", note: "EN.KI=「大地の主」。先頭のANは限定符" },
+  { chars: "𒀭𒂗𒆤", translit: "ᵈen-lil₂",    meaning: "エンリル神（神々の王）", note: "EN.LIL₂=「風の主」" },
+  { chars: "𒀭𒈹",   translit: "ᵈinanna",     meaning: "女神イナンナ（愛と戦い）", note: "のちのイシュタル" },
+  // --- 家族 ---
+  { chars: "𒀀𒀀",   translit: "a-a",         meaning: "父" },
+  { chars: "𒂼𒈬",   translit: "ama-ĝu₁₀",    meaning: "わたしの母" },
+  { chars: "𒁮𒈬",   translit: "dam-ĝu₁₀",    meaning: "わたしの妻・夫" },
+  { chars: "𒌉𒈬",   translit: "dumu-ĝu₁₀",   meaning: "わたしの息子" },
+  // --- もの・生きもの ---
+  { chars: "𒌨𒈤",   translit: "ur-mah",      meaning: "ライオン", note: "直訳「堂々たる犬」" },
+  { chars: "𒆬𒌓",   translit: "ku₃-babbar",  meaning: "銀・お金", note: "「輝く白」。UDをbabbar（白い）と読む" },
+  { chars: "𒆬𒄀",   translit: "ku₃-sig₁₇",   meaning: "金", note: "GIをsig₁₇と読む" },
+  { chars: "𒊕𒆠",   translit: "sag-ki",      meaning: "ひたい・顔つき", note: "直訳「頭の場所」" },
+  // --- 文法の例 ---
+  { chars: "𒃲𒃲",   translit: "gal-gal",     meaning: "大きいものたち", note: "字を重ねて複数を表す" },
+  { chars: "𒀀𒋫",   translit: "a-ta",        meaning: "水から", note: "TA=「〜から」の使用例" },
+  { chars: "𒆳𒃲",   translit: "kur-gal",     meaning: "大いなる山", note: "エンリル神の称号" },
 ];
 
 // ---- 読む（習った字だけの短い句・称号）----
@@ -427,6 +463,47 @@ const SENTENCES = [
     ],
     trans: "王のもの",
     note: "アッカド語。印章などに刻まれた所有表示の形",
+  },
+  {
+    words: [
+      { c: "𒈗",   t: "lugal", g: "王" },
+      { c: "𒃲",   t: "gal",   g: "大きい" },
+      { c: "𒈗",   t: "lugal", g: "王" },
+      { c: "𒆳𒆳", t: "kur-kur", g: "国々" },
+    ],
+    trans: "偉大な王、諸国の王",
+    note: "アッシリア王碑文の定型 šarru rabû šar mātāti を楔形のまま読む形",
+  },
+  {
+    words: [
+      { c: "𒀭𒂗𒆤", t: "ᵈen-lil₂", g: "エンリル神" },
+      { c: "𒆳𒃲",   t: "kur-gal",  g: "大いなる山" },
+    ],
+    trans: "エンリル、大いなる山",
+    note: "実際に使われたエンリルの称号",
+  },
+  {
+    words: [
+      { c: "𒇽",     t: "lu₂",      g: "人" },
+      { c: "𒆠𒂗𒄀", t: "ki-en-gi", g: "シュメール" },
+    ],
+    trans: "シュメールの人",
+  },
+  {
+    words: [
+      { c: "𒊭",   t: "ša",   g: "〜のもの" },
+      { c: "𒀭𒌓", t: "ᵈutu", g: "太陽神" },
+    ],
+    trans: "シャマシュ（太陽神）のもの",
+    note: "アッカド語。UDの神をアッカド語ではシャマシュと呼ぶ",
+  },
+  {
+    words: [
+      { c: "𒂍",     t: "e₂",       g: "家・神殿" },
+      { c: "𒀭𒂗𒆤", t: "ᵈen-lil₂", g: "エンリル神" },
+    ],
+    trans: "エンリルの神殿",
+    note: "実際の碑文では e₂ ᵈen-lil₂-la₂ と語尾がつく。ここでは簡略形",
   },
 ];
 
