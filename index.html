@@ -286,7 +286,7 @@
   </section>
 
   <section id="tab-guide" hidden class="panel">
-    <h2>楔は4種類（斜めは右下・右上の2方向）</h2>
+    <h2>楔は4種類（斜めは3方向）</h2>
     <div id="wedge-demos"></div>
     <div class="note-card">
       どんなに複雑な字も、この4種類の楔の組み合わせでできています。
@@ -295,10 +295,10 @@
     </div>
     <h2>打てる方向は決まっている</h2>
     <div class="note-card">
-      葦ペンの持ち方の制約で、楔は<b>左→右・上→下・斜め右下・斜め右上</b>
-      （＋ウィンケルハーケン）にしか打ちません。おおまかには「右か下へ」。
-      右→左や真上へのドラッグがこのアプリで弾かれるのはそのためです。
-      斜め右上は 𒀭（AN）の星形などで使います。
+      葦ペンの持ち方の制約で、楔は<b>左→右・上→下・斜め（右下・右上・左下）</b>
+      （＋ウィンケルハーケン）にしか打ちません。
+      右→左（真横）や上向きのドラッグがこのアプリで弾かれるのはそのためです。
+      斜め右上は <span class="cune">𒀭</span>（AN）の星形、斜め左下は <span class="cune">𒊕</span>（SAG）などで使います。
     </div>
     <h2>書き進める順番のめやす</h2>
     <div class="note-card">
@@ -521,6 +521,7 @@ const TYPE_LABEL = {
   horizontal: "横楔",
   oblique: "斜め楔（右下）",
   oblique_up: "斜め楔（右上）",
+  oblique_dl: "斜め楔（左下）",
   winkelhaken: "ウィンケルハーケン",
 };
 
@@ -600,7 +601,7 @@ function practiceWord(word) {
 function renderCard() {
   if (!currentSign) {
     cardEl.innerHTML = `<div class="info"><div class="rd">自由練習</div>
-      <div>ドラッグ=楔を打つ（左→右 / 上→下 / 斜め右下・右上）・タップ=ウィンケルハーケン。上の字を選ぶと練習モードになります。</div></div>`;
+      <div>ドラッグ=楔を打つ（左→右 / 上→下 / 斜めは右下・右上・左下）・タップ=ウィンケルハーケン。上の字を選ぶと練習モードになります。</div></div>`;
     return;
   }
   const s = currentSign;
@@ -639,7 +640,8 @@ function classify(dx, dy, len) {
   if (angle >= 22.5 && angle < 67.5) return "oblique";
   if (angle >= 67.5 && angle <= 112.5) return "vertical";
   if (angle >= -67.5 && angle < -22.5) return "oblique_up"; // AN(𒀭)などの星形に必要
-  return null; // 右→左・真上方向は葦ペンでは打てない
+  if (angle > 112.5 && angle <= 157.5) return "oblique_dl"; // 右上→左下。SAG(𒊕)などに必要
+  return null; // 右→左・上方向は葦ペンでは打てない
 }
 
 // ---- 描画（三角形の頭 + 先細りの尾）----
@@ -763,7 +765,7 @@ function endDrag(e) {
   const type = classify(dx, dy, len);
 
   if (!type) {
-    showWarn("⚠ 右→左・真上方向には打てません（楔は右か下向きに）");
+    showWarn("⚠ 右→左（真横）・上方向には打てません");
     return;
   }
 
@@ -888,6 +890,7 @@ function buildWedgeDemos() {
     { type: "vertical",    label: "縦楔（上→下）",   wx: [42, 10, 42, 60], ax: [62, 10, 62, 60] },
     { type: "oblique",     label: "斜め楔（左上→右下）", wx: [24, 10, 74, 52], ax: [36, 4, 86, 46] },
     { type: "oblique_up",  label: "斜め楔（左下→右上）", wx: [24, 52, 74, 10], ax: [36, 58, 86, 16] },
+    { type: "oblique_dl",  label: "斜め楔（右上→左下）", wx: [74, 10, 24, 52], ax: [86, 16, 36, 58] },
     { type: "winkelhaken", label: "ウィンケルハーケン（タップ）", wx: [44, 32, 44, 32], ax: null },
   ];
   for (const d of demos) {
