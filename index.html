@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>楔形文字手書き — P1</title>
+<title>楔形文字手書き — P2</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
@@ -22,13 +22,25 @@
     display: flex;
     align-items: baseline;
     gap: 12px;
+    flex-wrap: wrap;
   }
   header h1 { font-size: 16px; font-weight: 600; }
   header .hint { font-size: 11px; opacity: 0.75; }
-  #board {
+  main {
     flex: 1;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    overflow: auto;
+  }
+  #board {
+    width: min(92vw, 52vh, 420px);
+    aspect-ratio: 1;
     background: #c8a878;
+    border: 2px solid #5c4a33;
+    border-radius: 4px;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -36,6 +48,36 @@
     cursor: crosshair;
     display: block;
   }
+  #panel {
+    width: min(92vw, 420px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    background: #5c4a33;
+    color: #e8dcc8;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.4; cursor: default; }
+  #stroke-list {
+    list-style: none;
+    max-height: 140px;
+    overflow-y: auto;
+    background: rgba(232, 220, 200, 0.5);
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  #stroke-list:empty { display: none; }
+  #stroke-list li { padding: 3px 10px; }
+  #stroke-list li.last { background: rgba(92, 74, 51, 0.25); font-weight: 600; }
+  #stroke-list .num { display: inline-block; min-width: 2em; opacity: 0.6; }
   footer {
     padding: 6px 14px;
     background: #5c4a33;
@@ -47,14 +89,32 @@
     gap: 12px;
   }
   #warn { color: #f0b0a0; }
+  @media (min-width: 700px) {
+    main { flex-direction: row; justify-content: center; align-items: flex-start; }
+    #board { width: min(60vh, 420px); }
+    #panel { width: 240px; }
+    #stroke-list { max-height: min(60vh, 336px); }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>𒀸 楔形文字手書き P1</h1>
+  <h1>𒀸 楔形文字手書き P2</h1>
   <span class="hint">ドラッグ=楔を打つ（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン</span>
 </header>
-<svg id="board"></svg>
+<main>
+  <svg id="board" viewBox="0 0 300 300"><g id="strokes-layer"></g></svg>
+  <div id="panel">
+    <div id="toolbar">
+      <button id="btn-undo" disabled>↩ undo</button>
+      <button id="btn-clear" disabled>全クリア</button>
+      <button id="btn-save" disabled>JSON保存</button>
+      <button id="btn-load">JSON読込</button>
+      <input type="file" id="file-input" accept=".json,application/json" hidden>
+    </div>
+    <ol id="stroke-list"></ol>
+  </div>
+</main>
 <footer>
   <span id="status">粘土板をドラッグしてください</span>
   <span id="warn"></span>
@@ -62,10 +122,13 @@
 <script>
 "use strict";
 
-// ---- 定数（設計メモ 3.2 初期値。あとで調整前提）----
-const TAP_THRESHOLD = 15;   // px 未満のドラッグ = ウィンケルハーケン
-const INK = "#3d2f1f";      // P1 は単色シルエット
-const WH_SIZE = 16;         // ウィンケルハーケンの腕の長さ
+// ---- 定数 ----
+// P2から座標は 300x300 の viewBox 単位に正規化（設計メモ 4）。
+// 保存した Glyph JSON が端末の画面サイズに依存しない。
+const VIEW = 300;
+const TAP_THRESHOLD = 12;   // viewBox単位。未満のドラッグ = ウィンケルハーケン
+const INK = "#3d2f1f";
+const WH_SIZE = 12;
 
 const TYPE_LABEL = {
   vertical: "縦楔",
@@ -74,44 +137,48 @@ const TYPE_LABEL = {
   winkelhaken: "ウィンケルハーケン",
 };
 
-// ---- 状態 ----
-// Glyph（設計メモ 2.2）。order / angle / length は生データのまま保持し、
-// P4 の書き順判定でも過去データをそのまま採点できるようにする。
+// ---- 状態（設計メモ 2.2 Glyph）----
 const glyph = { strokes: [] };
-let dragStart = null;   // {x, y} pointerdown の位置 = 楔の頭
+let dragStart = null;
 
 const board = document.getElementById("board");
+const strokesLayer = document.getElementById("strokes-layer");
+const listEl = document.getElementById("stroke-list");
 const statusEl = document.getElementById("status");
 const warnEl = document.getElementById("warn");
+const btnUndo = document.getElementById("btn-undo");
+const btnClear = document.getElementById("btn-clear");
+const btnSave = document.getElementById("btn-save");
+const btnLoad = document.getElementById("btn-load");
+const fileInput = document.getElementById("file-input");
 const SVG_NS = "http://www.w3.org/2000/svg";
 let previewEl = null;
 let warnTimer = null;
 
 // ---- 分類（設計メモ 3.2）----
-// 戻り値: type 文字列 / 逆方向ドラッグは null（無効）
 function classify(dx, dy, len) {
   if (len < TAP_THRESHOLD) return "winkelhaken";
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI; // 画面座標: 下方向が +90°
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
   if (angle >= -22.5 && angle < 22.5) return "horizontal";
   if (angle >= 22.5 && angle < 67.5) return "oblique";
   if (angle >= 67.5 && angle <= 112.5) return "vertical";
   return null; // 右→左・下→上などは葦ペンでは打てない方向
 }
 
-// ---- 描画（設計メモ 3.3: 三角形の頭 + 先細りの尾）----
+// ---- 描画（三角形の頭 + 先細りの尾）----
 function wedgePoints(x, y, ex, ey) {
   const dx = ex - x, dy = ey - y;
   const len = Math.hypot(dx, dy);
-  const ux = dx / len, uy = dy / len;   // 進行方向
-  const px = -uy, py = ux;              // 垂直方向
-  const hw = Math.min(14, Math.max(7, len * 0.16)); // 頭の半幅（長さ連動+上下限）
-  const hl = hw * 1.7;                              // 頭の奥行き
-  const tw = Math.max(1.5, hw * 0.28);              // 尾の付け根の半幅
+  const ux = dx / len, uy = dy / len;
+  const px = -uy, py = ux;
+  const hw = Math.min(11, Math.max(5.5, len * 0.16)); // 頭の半幅（長さ連動+上下限）
+  const hl = hw * 1.7;
+  const tw = Math.max(1.2, hw * 0.28);
   const pts = [
-    [x + px * hw, y + py * hw],                     // 頭の底辺（左右）
+    [x + px * hw, y + py * hw],
     [x - px * hw, y - py * hw],
-    [x + ux * hl - px * tw, y + uy * hl - py * tw], // 尾の付け根
-    [ex, ey],                                       // 尾の先端
+    [x + ux * hl - px * tw, y + uy * hl - py * tw],
+    [ex, ey],
     [x + ux * hl + px * tw, y + uy * hl + py * tw],
   ];
   return pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
@@ -119,14 +186,13 @@ function wedgePoints(x, y, ex, ey) {
 
 function makeStrokeEl(type, x, y, ex, ey) {
   if (type === "winkelhaken") {
-    // 頭のみ・尾なしの「く」の字（三角2辺）
     const s = WH_SIZE;
     const el = document.createElementNS(SVG_NS, "path");
     el.setAttribute("d",
       `M ${x + s} ${y - s * 0.8} L ${x} ${y} L ${x + s} ${y + s * 0.8}`);
     el.setAttribute("fill", "none");
     el.setAttribute("stroke", INK);
-    el.setAttribute("stroke-width", "7");
+    el.setAttribute("stroke-width", "5.5");
     el.setAttribute("stroke-linejoin", "miter");
     return el;
   }
@@ -136,10 +202,41 @@ function makeStrokeEl(type, x, y, ex, ey) {
   return el;
 }
 
-// ---- 入力（Pointer Events で統一）----
+// Stroke は x/y/angle/length しか持たないので終点は復元する
+// （JSON読込やundo後の再描画をデータだけから行うため）
+function strokeEnd(s) {
+  const rad = s.angle * Math.PI / 180;
+  return { ex: s.x + Math.cos(rad) * s.length, ey: s.y + Math.sin(rad) * s.length };
+}
+
+// ---- 再描画（データ → 画面。undo/クリア/読込はすべてここを通る）----
+function render() {
+  strokesLayer.innerHTML = "";
+  listEl.innerHTML = "";
+  for (const s of glyph.strokes) {
+    const { ex, ey } = strokeEnd(s);
+    strokesLayer.appendChild(makeStrokeEl(s.type, s.x, s.y, ex, ey));
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="num">${s.order}.</span>${TYPE_LABEL[s.type]}` +
+      (s.type === "winkelhaken" ? "" : ` <small>(${s.angle}°, ${s.length}px)</small>`);
+    listEl.appendChild(li);
+  }
+  if (listEl.lastChild) {
+    listEl.lastChild.classList.add("last");
+    listEl.scrollTop = listEl.scrollHeight;
+  }
+  const n = glyph.strokes.length;
+  btnUndo.disabled = btnClear.disabled = btnSave.disabled = n === 0;
+  if (n === 0) statusEl.textContent = "粘土板をドラッグしてください";
+}
+
+// ---- 入力（Pointer Events）----
 function localPos(e) {
   const r = board.getBoundingClientRect();
-  return { x: e.clientX - r.left, y: e.clientY - r.top };
+  return {
+    x: (e.clientX - r.left) * VIEW / r.width,
+    y: (e.clientY - r.top) * VIEW / r.height,
+  };
 }
 
 board.addEventListener("pointerdown", (e) => {
@@ -159,7 +256,6 @@ board.addEventListener("pointermove", (e) => {
     previewEl = makeStrokeEl(type, dragStart.x, dragStart.y, p.x, p.y);
     previewEl.setAttribute("opacity", "0.35");
   } else {
-    // 無効方向はプレビューを細い赤線にして「打てない」を体で伝える
     previewEl = document.createElementNS(SVG_NS, "line");
     previewEl.setAttribute("x1", dragStart.x);
     previewEl.setAttribute("y1", dragStart.y);
@@ -190,32 +286,96 @@ function endDrag(e) {
     return;
   }
 
-  board.appendChild(makeStrokeEl(type, start.x, start.y, p.x, p.y));
   glyph.strokes.push({
     type,
-    x: start.x,
-    y: start.y,
+    x: Math.round(start.x * 10) / 10,
+    y: Math.round(start.y * 10) / 10,
     angle: Math.round(angle * 10) / 10,
     length: Math.round(len * 10) / 10,
     order: glyph.strokes.length + 1,
     timestamp: Date.now(),
   });
+  render();
 
   const s = glyph.strokes[glyph.strokes.length - 1];
-  statusEl.textContent = type === "winkelhaken"
-    ? `${s.order}打目: ${TYPE_LABEL[type]}`
-    : `${s.order}打目: ${TYPE_LABEL[type]} (${s.angle}°, ${s.length}px)`;
+  statusEl.textContent = s.type === "winkelhaken"
+    ? `${s.order}打目: ${TYPE_LABEL[s.type]}`
+    : `${s.order}打目: ${TYPE_LABEL[s.type]} (${s.angle}°, ${s.length}px)`;
 }
 
 board.addEventListener("pointerup", endDrag);
 board.addEventListener("pointercancel", endDrag);
 board.addEventListener("contextmenu", (e) => e.preventDefault());
 
+// ---- ツールバー ----
+btnUndo.addEventListener("click", () => {
+  glyph.strokes.pop();
+  render();
+});
+
+btnClear.addEventListener("click", () => {
+  glyph.strokes.length = 0;
+  render();
+});
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "z" && glyph.strokes.length) {
+    e.preventDefault();
+    glyph.strokes.pop();
+    render();
+  }
+});
+
+// ---- JSON 書き出し / 読み込み（設計メモ 4）----
+btnSave.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(glyph, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `glyph-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusEl.textContent = `JSON保存: ${glyph.strokes.length}打`;
+});
+
+btnLoad.addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files[0];
+  fileInput.value = "";
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    loadGlyph(data);
+    statusEl.textContent = `JSON読込: ${glyph.strokes.length}打`;
+  } catch (err) {
+    showWarn("⚠ JSONを読み込めません: " + err.message);
+  }
+});
+
+function loadGlyph(data) {
+  if (!data || !Array.isArray(data.strokes)) {
+    throw new Error("strokes 配列がありません");
+  }
+  const strokes = data.strokes.map((s, i) => {
+    if (!TYPE_LABEL[s.type]) throw new Error(`${i + 1}番目: 不明なtype "${s.type}"`);
+    if (![s.x, s.y, s.angle, s.length].every(Number.isFinite)) {
+      throw new Error(`${i + 1}番目: x/y/angle/length が不正です`);
+    }
+    return { ...s, order: i + 1 }; // order は読み込み順で振り直す
+  });
+  glyph.strokes.length = 0;
+  glyph.strokes.push(...strokes);
+  if ("targetChar" in data) glyph.targetChar = data.targetChar; // P3以降用に保持
+  render();
+}
+
 function showWarn(msg) {
   warnEl.textContent = msg;
   clearTimeout(warnTimer);
-  warnTimer = setTimeout(() => { warnEl.textContent = ""; }, 2000);
+  warnTimer = setTimeout(() => { warnEl.textContent = ""; }, 2500);
 }
+
+render();
 </script>
 </body>
 </html>
