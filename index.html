@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>楔形文字手書き — P3</title>
+<title>楔形文字手書き</title>
 <style>
   @font-face {
     font-family: "Noto Sans Cuneiform";
@@ -18,17 +18,43 @@
     font-family: system-ui, sans-serif;
     background: #8a7355;
     color: #3d2f1f;
-    overscroll-behavior: none;
   }
   .cune { font-family: "Noto Sans Cuneiform", sans-serif; }
+  /* --- タブ --- */
+  #tabs {
+    display: flex;
+    background: #5c4a33;
+    flex-shrink: 0;
+  }
+  #tabs button {
+    flex: 1;
+    font: inherit;
+    font-size: 14px;
+    padding: 9px 4px;
+    border: none;
+    background: none;
+    color: #e8dcc8;
+    opacity: 0.6;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+  #tabs button.on { opacity: 1; border-bottom-color: #e8dcc8; font-weight: 600; }
   main {
     flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+  }
+  main > section { width: min(92vw, 640px); }
+  main > section[hidden] { display: none !important; }
+  /* --- 書くタブ --- */
+  #tab-write {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 12px;
-    overflow: auto;
   }
   #left, #right {
     width: min(92vw, 420px);
@@ -36,7 +62,6 @@
     flex-direction: column;
     gap: 8px;
   }
-  /* --- 出題チップ（モバイルは横スクロール1行で省スペース） --- */
   #chips {
     display: flex;
     flex-wrap: nowrap;
@@ -61,7 +86,6 @@
   .chip .g { font-family: "Noto Sans Cuneiform", sans-serif; font-size: 22px; line-height: 1.2; }
   .chip .r { font-size: 10px; opacity: 0.7; }
   .chip.sel { background: #5c4a33; color: #e8dcc8; }
-  /* --- お手本カード --- */
   #sign-card {
     display: flex;
     gap: 14px;
@@ -81,7 +105,6 @@
   #sign-card .info { font-size: 13px; display: flex; flex-direction: column; gap: 2px; }
   #sign-card .rd { font-size: 16px; font-weight: 700; }
   #sign-card .uni { font-size: 10px; opacity: 0.6; }
-  /* --- キャンバス --- */
   #board-wrap { position: relative; width: 100%; }
   .fab {
     position: absolute;
@@ -143,6 +166,67 @@
   #stroke-list li { padding: 3px 10px; }
   #stroke-list li.last { background: rgba(92, 74, 51, 0.25); font-weight: 600; }
   #stroke-list .num { display: inline-block; min-width: 2em; opacity: 0.6; }
+  /* --- 書き方 / 単語帳 / 読む 共通 --- */
+  .panel { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+  .panel h2 { font-size: 15px; color: #f0e8d8; margin-top: 6px; }
+  .note-card {
+    background: rgba(232, 220, 200, 0.5);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .note-card ul { padding-left: 1.3em; }
+  .caveat { font-size: 11px; opacity: 0.75; }
+  #wedge-demos { display: flex; gap: 8px; flex-wrap: wrap; }
+  .demo-box {
+    background: #c8a878;
+    border: 1px solid #5c4a33;
+    border-radius: 4px;
+    padding: 4px;
+    text-align: center;
+    font-size: 11px;
+    flex: 1;
+    min-width: 100px;
+  }
+  .demo-box svg { width: 100%; height: 64px; display: block; }
+  /* フラッシュカード */
+  .fcard {
+    background: rgba(232, 220, 200, 0.5);
+    border-radius: 4px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  .fcard .q { font-family: "Noto Sans Cuneiform", sans-serif; font-size: 38px; line-height: 1.3; }
+  .fcard .a { display: none; font-size: 13px; margin-top: 6px; line-height: 1.6; }
+  .fcard.open .a { display: block; }
+  .fcard .tap-hint { font-size: 11px; opacity: 0.55; float: right; margin-top: 4px; }
+  .fcard .rd { font-weight: 700; font-size: 15px; }
+  .breakdown { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .bd-chip {
+    font: inherit;
+    border: none;
+    border-radius: 4px;
+    background: rgba(92, 74, 51, 0.2);
+    cursor: pointer;
+    padding: 2px 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 10px;
+  }
+  .bd-chip .g { font-family: "Noto Sans Cuneiform", sans-serif; font-size: 20px; }
+  .trace-btn {
+    font: inherit;
+    font-size: 12px;
+    margin-top: 8px;
+    padding: 5px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #5c4a33;
+    color: #e8dcc8;
+    cursor: pointer;
+  }
   footer {
     padding: 6px 14px;
     background: #5c4a33;
@@ -152,10 +236,12 @@
     display: flex;
     justify-content: space-between;
     gap: 12px;
+    flex-shrink: 0;
   }
   #warn { color: #f0b0a0; }
   @media (min-width: 820px) {
-    main { flex-direction: row; justify-content: center; align-items: flex-start; }
+    #tab-write { flex-direction: row; justify-content: center; align-items: flex-start; }
+    #tab-write[hidden] { display: none; }
     #left { width: 340px; }
     #right { width: min(60vh, 420px); }
     #stroke-list { max-height: 200px; }
@@ -164,31 +250,79 @@
 </style>
 </head>
 <body>
+<nav id="tabs">
+  <button data-tab="write" class="on">書く</button>
+  <button data-tab="guide">書き方</button>
+  <button data-tab="words">単語帳</button>
+  <button data-tab="read">読む</button>
+</nav>
 <main>
-  <div id="left">
-    <div id="chips"></div>
-    <div id="sign-card"></div>
-  </div>
-  <div id="right">
-    <div id="board-wrap">
-      <svg id="board" viewBox="0 0 300 300">
-        <text id="ghost" font-size="100" text-anchor="middle"></text>
-        <g id="strokes-layer"></g>
-      </svg>
-      <button class="fab" id="btn-undo" disabled>↩ undo</button>
-      <button class="fab" id="btn-clear" disabled>クリア</button>
+  <section id="tab-write">
+    <div id="left">
+      <div id="chips"></div>
+      <div id="sign-card"></div>
     </div>
-    <label id="trace-row">
-      <input type="checkbox" id="trace-toggle" checked>
-      お手本を薄く重ねる（なぞり書き）
-    </label>
-    <div id="toolbar">
-      <button class="tb" id="btn-save" disabled>JSON保存</button>
-      <button class="tb" id="btn-load">JSON読込</button>
-      <input type="file" id="file-input" accept=".json,application/json" hidden>
+    <div id="right">
+      <div id="board-wrap">
+        <svg id="board" viewBox="0 0 300 300">
+          <text id="ghost" font-size="100" text-anchor="middle"></text>
+          <g id="strokes-layer"></g>
+        </svg>
+        <button class="fab" id="btn-undo" disabled>↩ undo</button>
+        <button class="fab" id="btn-clear" disabled>クリア</button>
+      </div>
+      <label id="trace-row">
+        <input type="checkbox" id="trace-toggle" checked>
+        お手本を薄く重ねる（なぞり書き）
+      </label>
+      <div id="toolbar">
+        <button class="tb" id="btn-save" disabled>JSON保存</button>
+        <button class="tb" id="btn-load">JSON読込</button>
+        <input type="file" id="file-input" accept=".json,application/json" hidden>
+      </div>
+      <ol id="stroke-list"></ol>
     </div>
-    <ol id="stroke-list"></ol>
-  </div>
+  </section>
+
+  <section id="tab-guide" hidden class="panel">
+    <h2>楔は4種類だけ</h2>
+    <div id="wedge-demos"></div>
+    <div class="note-card">
+      どんなに複雑な字も、この4種類の楔の組み合わせでできています。
+      ドラッグの<b>始点が楔の「頭」</b>（葦ペンを粘土に押し込む点）、ドラッグの長さが尾の長さになります。
+      「線を引く」のではなく<b>「押して打つ」</b>イメージで。
+    </div>
+    <h2>打てる方向は決まっている</h2>
+    <div class="note-card">
+      葦ペンの持ち方の制約で、楔は<b>左→右・上→下・左上→右下</b>の3方向（＋ウィンケルハーケン）にしか打ちません。
+      右→左や下→上のドラッグがこのアプリで弾かれるのはそのためです。
+    </div>
+    <h2>書き進める順番のめやす</h2>
+    <div class="note-card">
+      <ul>
+        <li>字の<b>左側のかたまりから右</b>へ進む</li>
+        <li>同じ位置では<b>上の楔から下</b>へ</li>
+        <li><b>横楔をまとめて打ってから縦楔</b>、最後に斜め・ウィンケルハーケンという流れが多い</li>
+      </ul>
+      <div class="caveat">※ これは一般的な傾向です。正式な書き順は講座で確認してから、このアプリに正誤判定として組み込む予定（設計メモP4）。</div>
+    </div>
+    <h2>豆知識</h2>
+    <div class="note-card">
+      実際の粘土板は単語の間を空けずに詰めて書くことが多く、行は左から右へ進みます
+      （最古期は縦書きで、のちに文字ごと90度回転して横書きになりました）。
+      このアプリの「読む」タブでは読みやすさのため単語間を空けて表示しています。
+    </div>
+  </section>
+
+  <section id="tab-words" hidden class="panel">
+    <div class="note-card">カードをタップすると読みと意味が出ます。「なぞる」で書く練習へ。</div>
+    <div id="word-cards"></div>
+  </section>
+
+  <section id="tab-read" hidden class="panel">
+    <div class="note-card">習った字だけでできた短い句・称号です。まず自力で読んでからタップで答え合わせ。</div>
+    <div id="read-cards"></div>
+  </section>
 </main>
 <footer>
   <span id="status">お手本を選ぶか、そのままドラッグしてください</span>
@@ -198,14 +332,13 @@
 "use strict";
 
 // ---- 出題リスト（設計メモ 5: 手入力で追加していく方式）----
-// 音価・意味は基礎資料で確認済みの頻出サイン。講座で習ったら差し替え/追記する。
 const SIGNS = [
   { char: "𒀸", cp: "U+12038", name: "AŠ",    reading: "aš",         meaning: "横楔1本だけの最も単純な字。数の「1」にも使う" },
   { char: "𒁹", cp: "U+12079", name: "DIŠ",   reading: "diš",        meaning: "縦楔1本。数の「1」・人名の前に置く限定符" },
   { char: "𒌋", cp: "U+1230B", name: "U",     reading: "u",          meaning: "ウィンケルハーケン1つ。数の「10」" },
   { char: "𒀀", cp: "U+12000", name: "A",     reading: "a",          meaning: "水。最頻出の字のひとつ" },
   { char: "𒀭", cp: "U+1202D", name: "AN",    reading: "an / diĝir", meaning: "天・神。神名の前の限定符（DINGIR）" },
-  { char: "𒈬", cp: "U+1222C", name: "MU",    reading: "mu",         meaning: "名前・年" },
+  { char: "𒈬", cp: "U+1222C", name: "MU",    reading: "mu",         meaning: "名前・年。「私の（-ĝu₁₀）」にも使う" },
   { char: "𒆠", cp: "U+121A0", name: "KI",    reading: "ki",         meaning: "大地・場所。地名の後ろの限定符" },
   { char: "𒌓", cp: "U+12313", name: "UD",    reading: "ud / utu",   meaning: "太陽・日。太陽神ウトゥ" },
   { char: "𒅗", cp: "U+12157", name: "KA",    reading: "ka",         meaning: "口" },
@@ -239,12 +372,70 @@ const SIGNS = [
   { char: "𒍪", cp: "U+1236A", name: "ZU",    reading: "zu",         meaning: "知る。音節「ズ」" },
 ];
 
+// ---- 単語帳（出題35字だけで書ける実在の語）----
+const WORDS = [
+  { chars: "𒀭𒆠",   translit: "an-ki",       meaning: "天と地・宇宙" },
+  { chars: "𒂍𒃲",   translit: "e₂-gal",      meaning: "宮殿", note: "直訳「大きい家」。ヘブライ語 hēkhāl（神殿）の語源" },
+  { chars: "𒂍𒈬",   translit: "e₂-ĝu₁₀",     meaning: "わたしの家", note: "MUが所有語尾「私の」を表す" },
+  { chars: "𒆠𒂗𒄀", translit: "ki-en-gi",    meaning: "シュメール", note: "シュメール人が自分の国を呼んだ名" },
+  { chars: "𒀭𒌓",   translit: "ᵈutu",        meaning: "太陽神ウトゥ", note: "先頭のANは神名の限定符で発音しない" },
+  { chars: "𒌉𒊩",   translit: "dumu-munus",  meaning: "娘", note: "「子＋女」の組み合わせ" },
+  { chars: "𒇽𒃲",   translit: "lu₂ gal",     meaning: "大きい人", note: "くっつけて書くと LUGAL（王）。王の語源" },
+  { chars: "𒀀𒁀",   translit: "a-ba",        meaning: "だれ？（疑問詞）" },
+  { chars: "𒀀𒈾",   translit: "a-na",        meaning: "なに？（疑問詞）", note: "アッカド語では ana「〜へ」" },
+  { chars: "𒈗𒃲",   translit: "lugal gal",   meaning: "偉大な王", note: "王碑文の定型句" },
+];
+
+// ---- 読む（習った字だけの短い句・称号）----
+const SENTENCES = [
+  {
+    words: [
+      { c: "𒀭𒌓", t: "ᵈutu", g: "太陽神ウトゥ" },
+      { c: "𒈗",   t: "lugal", g: "王" },
+      { c: "𒃲",   t: "gal",   g: "大きい" },
+    ],
+    trans: "太陽神ウトゥ、偉大な王",
+    note: "神をたたえる称号の並び。王碑文でよく見る形",
+  },
+  {
+    words: [
+      { c: "𒈗",     t: "lugal",    g: "王" },
+      { c: "𒆠𒂗𒄀", t: "ki-en-gi", g: "シュメール" },
+    ],
+    trans: "シュメールの王",
+    note: "実際に使われた王号",
+  },
+  {
+    words: [
+      { c: "𒈗",   t: "lugal",   g: "王" },
+      { c: "𒆳𒆳", t: "kur-kur", g: "国々（KURを重ねて複数）" },
+    ],
+    trans: "諸国の王",
+    note: "エンリル神などに使われた称号。同じ字を重ねると複数の意味に",
+  },
+  {
+    words: [
+      { c: "𒂍𒃲", t: "e₂-gal", g: "宮殿" },
+      { c: "𒈬",   t: "ĝu₁₀",   g: "私の" },
+    ],
+    trans: "わたしの宮殿",
+  },
+  {
+    words: [
+      { c: "𒊭", t: "ša",    g: "〜のもの" },
+      { c: "𒈗", t: "lugal", g: "王" },
+    ],
+    trans: "王のもの",
+    note: "アッカド語。印章などに刻まれた所有表示の形",
+  },
+];
+
 // ---- 定数 ----
 const VIEW = 300;
 const TAP_THRESHOLD = 12;
 const INK = "#3d2f1f";
 const WH_SIZE = 12;
-const GHOST_FIT = 240; // お手本をキャンバス内に収める最大サイズ
+const GHOST_FIT = 240;
 
 const TYPE_LABEL = {
   vertical: "縦楔",
@@ -255,7 +446,7 @@ const TYPE_LABEL = {
 
 // ---- 状態 ----
 const glyph = { strokes: [] };
-let currentSign = null; // SIGNS の要素 or null（自由練習）
+let currentSign = null; // SIGNS の要素 / 単語の擬似お手本 / null（自由練習）
 let dragStart = null;
 
 const board = document.getElementById("board");
@@ -275,6 +466,17 @@ const fileInput = document.getElementById("file-input");
 const SVG_NS = "http://www.w3.org/2000/svg";
 let previewEl = null;
 let warnTimer = null;
+
+// ---- タブ ----
+function switchTab(name) {
+  document.querySelectorAll("#tabs button").forEach(b =>
+    b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll("main > section").forEach(s =>
+    s.hidden = s.id !== "tab-" + name);
+  if (name === "write") renderGhost(); // 非表示中はgetBBoxが効かないため戻ったとき再計算
+}
+document.querySelectorAll("#tabs button").forEach(b =>
+  b.addEventListener("click", () => switchTab(b.dataset.tab)));
 
 // ---- 出題 UI ----
 function buildChips() {
@@ -303,6 +505,18 @@ function selectSign(sign) {
   renderGhost();
 }
 
+// 単語帳から「なぞる」: 複数文字をまとめてお手本にする擬似サイン
+function practiceWord(word) {
+  selectSign({
+    char: word.chars,
+    name: word.translit,
+    reading: word.translit,
+    meaning: word.meaning + (word.note ? "。" + word.note : ""),
+    cp: "",
+  });
+  switchTab("write");
+}
+
 function renderCard() {
   if (!currentSign) {
     cardEl.innerHTML = `<div class="info"><div class="rd">自由練習</div>
@@ -310,16 +524,18 @@ function renderCard() {
     return;
   }
   const s = currentSign;
+  const uni = s.cp
+    ? `<div class="uni">${s.cp} CUNEIFORM SIGN ${s.name.replace(/Š/g, "SH").replace(/₂/g, "2")}</div>`
+    : "";
   cardEl.innerHTML = `
     <div class="glyph">${s.char}</div>
     <div class="info">
       <div class="rd">${s.name} <small>[${s.reading}]</small></div>
       <div>${s.meaning}</div>
-      <div class="uni">${s.cp} CUNEIFORM SIGN ${s.name.replace(/Š/g, "SH").replace(/₂/g, "2")}</div>
+      ${uni}
     </div>`;
 }
 
-// お手本をキャンバス中央に薄く表示（フォント読み込み後にサイズを実測して収める）
 function renderGhost() {
   const show = currentSign && traceToggle.checked;
   ghostEl.textContent = show ? currentSign.char : "";
@@ -491,7 +707,7 @@ board.addEventListener("pointerup", endDrag);
 board.addEventListener("pointercancel", endDrag);
 board.addEventListener("contextmenu", (e) => e.preventDefault());
 
-// ---- ツールバー ----
+// ---- undo / クリア ----
 btnUndo.addEventListener("click", () => {
   glyph.strokes.pop();
   render();
@@ -515,7 +731,7 @@ btnSave.addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(glyph, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  const label = currentSign ? currentSign.name.replace("₂", "2") : "free";
+  const label = currentSign ? currentSign.name.replace(/₂/g, "2").replace(/[^\w-]/g, "_") : "free";
   a.download = `glyph-${label}-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
@@ -550,8 +766,11 @@ function loadGlyph(data) {
   });
   glyph.strokes.length = 0;
   glyph.strokes.push(...strokes);
-  // targetChar が出題リストにあればお手本も復元する
-  selectSign(SIGNS.find(sg => sg.char === data.targetChar) || null);
+  // targetChar が字・単語のリストにあればお手本も復元する
+  const sign = SIGNS.find(sg => sg.char === data.targetChar);
+  const word = !sign && WORDS.find(w => w.chars === data.targetChar);
+  if (word) practiceWord(word);
+  else selectSign(sign || null);
   render();
 }
 
@@ -561,10 +780,132 @@ function showWarn(msg) {
   warnTimer = setTimeout(() => { warnEl.textContent = ""; }, 2500);
 }
 
+// ---- 書き方タブ: 楔4種のデモ図 ----
+function arrowEl(x1, y1, x2, y2) {
+  const g = document.createElementNS(SVG_NS, "g");
+  const line = document.createElementNS(SVG_NS, "line");
+  line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+  line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+  line.setAttribute("stroke", "#a04030");
+  line.setAttribute("stroke-width", "2");
+  line.setAttribute("stroke-dasharray", "4 3");
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  const ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+  const px = -uy, py = ux;
+  const head = document.createElementNS(SVG_NS, "polygon");
+  head.setAttribute("points",
+    `${x2},${y2} ${x2 - ux * 8 + px * 4},${y2 - uy * 8 + py * 4} ${x2 - ux * 8 - px * 4},${y2 - uy * 8 - py * 4}`);
+  head.setAttribute("fill", "#a04030");
+  g.append(line, head);
+  return g;
+}
+
+function buildWedgeDemos() {
+  const wrap = document.getElementById("wedge-demos");
+  const demos = [
+    { type: "horizontal",  label: "横楔（左→右）",   wx: [16, 30, 84, 30], ax: [16, 52, 84, 52] },
+    { type: "vertical",    label: "縦楔（上→下）",   wx: [42, 10, 42, 60], ax: [62, 10, 62, 60] },
+    { type: "oblique",     label: "斜め楔（左上→右下）", wx: [24, 10, 74, 52], ax: [36, 4, 86, 46] },
+    { type: "winkelhaken", label: "ウィンケルハーケン（タップ）", wx: [44, 32, 44, 32], ax: null },
+  ];
+  for (const d of demos) {
+    const box = document.createElement("div");
+    box.className = "demo-box";
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 100 66");
+    svg.appendChild(makeStrokeEl(d.type, ...d.wx));
+    if (d.ax) svg.appendChild(arrowEl(...d.ax));
+    else {
+      const c = document.createElementNS(SVG_NS, "circle");
+      c.setAttribute("cx", 70); c.setAttribute("cy", 32); c.setAttribute("r", 9);
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", "#a04030");
+      c.setAttribute("stroke-width", "2");
+      c.setAttribute("stroke-dasharray", "3 3");
+      const dot = document.createElementNS(SVG_NS, "circle");
+      dot.setAttribute("cx", 70); dot.setAttribute("cy", 32); dot.setAttribute("r", 2.5);
+      dot.setAttribute("fill", "#a04030");
+      svg.append(c, dot);
+    }
+    const cap = document.createElement("div");
+    cap.textContent = d.label;
+    box.append(svg, cap);
+    wrap.appendChild(box);
+  }
+}
+
+// ---- 単語帳 / 読む ----
+function breakdownEl(chars) {
+  const div = document.createElement("div");
+  div.className = "breakdown";
+  for (const ch of [...chars]) {
+    const sign = SIGNS.find(s => s.char === ch);
+    if (!sign) continue;
+    const b = document.createElement("button");
+    b.className = "bd-chip";
+    b.innerHTML = `<span class="g">${sign.char}</span><span>${sign.reading}</span>`;
+    b.title = sign.meaning;
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectSign(sign);
+      switchTab("write");
+    });
+    div.appendChild(b);
+  }
+  return div;
+}
+
+function buildWordCards() {
+  const wrap = document.getElementById("word-cards");
+  wrap.className = "panel";
+  for (const w of WORDS) {
+    const card = document.createElement("div");
+    card.className = "fcard";
+    card.innerHTML = `<span class="tap-hint">タップで答え</span><div class="q">${w.chars}</div>`;
+    const a = document.createElement("div");
+    a.className = "a";
+    a.innerHTML = `<div class="rd">${w.translit}</div><div>${w.meaning}</div>` +
+      (w.note ? `<div class="caveat">${w.note}</div>` : "");
+    a.appendChild(breakdownEl(w.chars));
+    const btn = document.createElement("button");
+    btn.className = "trace-btn";
+    btn.textContent = "✍ なぞる";
+    btn.addEventListener("click", (e) => { e.stopPropagation(); practiceWord(w); });
+    a.appendChild(btn);
+    card.appendChild(a);
+    card.addEventListener("click", () => card.classList.toggle("open"));
+    wrap.appendChild(card);
+  }
+}
+
+function buildReadCards() {
+  const wrap = document.getElementById("read-cards");
+  wrap.className = "panel";
+  for (const s of SENTENCES) {
+    const card = document.createElement("div");
+    card.className = "fcard";
+    const line = s.words.map(w => w.c).join("&#8202;&#8202;"); // 単語間に細いスペース
+    card.innerHTML = `<span class="tap-hint">タップで答え</span><div class="q">${line}</div>`;
+    const a = document.createElement("div");
+    a.className = "a";
+    a.innerHTML =
+      `<div class="rd">${s.words.map(w => w.t).join(" ")}</div>` +
+      `<div>${s.words.map(w => `${w.t}=${w.g}`).join("、")}</div>` +
+      `<div><b>訳: ${s.trans}</b></div>` +
+      (s.note ? `<div class="caveat">${s.note}</div>` : "");
+    a.appendChild(breakdownEl(s.words.map(w => w.c).join("")));
+    card.appendChild(a);
+    card.addEventListener("click", () => card.classList.toggle("open"));
+    wrap.appendChild(card);
+  }
+}
+
 buildChips();
+buildWedgeDemos();
+buildWordCards();
+buildReadCards();
 selectSign(null);
 render();
-// フォント読み込み完了後にお手本サイズを実測し直す
 document.fonts.ready.then(renderGhost);
 </script>
 </body>
