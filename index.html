@@ -177,6 +177,7 @@
     line-height: 1.7;
   }
   .note-card ul { padding-left: 1.3em; }
+  .note-card .cune { font-size: 19px; }
   .caveat { font-size: 11px; opacity: 0.75; }
   #wedge-demos { display: flex; gap: 8px; flex-wrap: wrap; }
   .demo-box {
@@ -285,7 +286,7 @@
   </section>
 
   <section id="tab-guide" hidden class="panel">
-    <h2>楔は4種類だけ</h2>
+    <h2>楔は4種類（斜めは3方向）</h2>
     <div id="wedge-demos"></div>
     <div class="note-card">
       どんなに複雑な字も、この4種類の楔の組み合わせでできています。
@@ -294,8 +295,10 @@
     </div>
     <h2>打てる方向は決まっている</h2>
     <div class="note-card">
-      葦ペンの持ち方の制約で、楔は<b>左→右・上→下・左上→右下</b>の3方向（＋ウィンケルハーケン）にしか打ちません。
-      右→左や下→上のドラッグがこのアプリで弾かれるのはそのためです。
+      葦ペンの持ち方の制約で、楔は<b>左→右・上→下・斜め（右下・右上・左下）</b>
+      （＋ウィンケルハーケン）にしか打ちません。
+      右→左（真横）や上向きのドラッグがこのアプリで弾かれるのはそのためです。
+      斜め右上は <span class="cune">𒀭</span>（AN）の星形、斜め左下は <span class="cune">𒊕</span>（SAG）などで使います。
     </div>
     <h2>書き進める順番のめやす</h2>
     <div class="note-card">
@@ -322,6 +325,14 @@
   <section id="tab-read" hidden class="panel">
     <div class="note-card">習った字だけでできた短い句・称号です。まず自力で読んでからタップで答え合わせ。</div>
     <div id="read-cards"></div>
+    <h2>数の読み方</h2>
+    <div class="note-card">
+      <span class="cune">𒁹</span>=1、<span class="cune">𒁹𒁹𒁹</span>=3、
+      <span class="cune">𒌋</span>=10、<span class="cune">𒌋𒁹</span>=11、
+      <span class="cune">𒌋𒌋𒁹𒁹𒁹</span>=23。
+      1は縦楔、10はウィンケルハーケンで、数えたいだけ打ちます。
+      <div class="caveat">シュメールの数は60進法。大きな数では <span class="cune">𒁹</span> が60を表すこともあり、位取りは文脈で判断します。</div>
+    </div>
   </section>
 </main>
 <footer>
@@ -370,6 +381,15 @@ const SIGNS = [
   { char: "𒊏", cp: "U+1228F", name: "RA",    reading: "ra",         meaning: "音節「ラ」" },
   { char: "𒋫", cp: "U+122EB", name: "TA",    reading: "ta",         meaning: "音節「タ」。「〜から」" },
   { char: "𒍪", cp: "U+1236A", name: "ZU",    reading: "zu",         meaning: "知る。音節「ズ」" },
+  // --- 家族・神・もの ---
+  { char: "𒂼", cp: "U+120BC", name: "AMA",   reading: "ama",        meaning: "母" },
+  { char: "𒁮", cp: "U+1206E", name: "DAM",   reading: "dam",        meaning: "配偶者（夫・妻）" },
+  { char: "𒎏", cp: "U+1238F", name: "NIN",   reading: "nin",        meaning: "女主人・女王。女神の名によく入る" },
+  { char: "𒈤", cp: "U+12224", name: "MAH",   reading: "mah",        meaning: "気高い・偉大な" },
+  { char: "𒆬", cp: "U+121AC", name: "KU₃",   reading: "ku₃",        meaning: "輝く・聖なる。銀(KU₃.UD)や金(KU₃.GI)の要素" },
+  { char: "𒄞", cp: "U+1211E", name: "GUD",   reading: "gu₄",        meaning: "牛" },
+  { char: "𒆤", cp: "U+121A4", name: "KID",   reading: "kid / lil₂", meaning: "風(lil₂)。エンリル(EN.LIL₂)の後半の字" },
+  { char: "𒈹", cp: "U+12239", name: "MUŠ₃",  reading: "muš₃ / inanna", meaning: "女神イナンナを表す字" },
 ];
 
 // ---- 単語帳（出題35字だけで書ける実在の語）----
@@ -384,6 +404,24 @@ const WORDS = [
   { chars: "𒀀𒁀",   translit: "a-ba",        meaning: "だれ？（疑問詞）" },
   { chars: "𒀀𒈾",   translit: "a-na",        meaning: "なに？（疑問詞）", note: "アッカド語では ana「〜へ」" },
   { chars: "𒈗𒃲",   translit: "lugal gal",   meaning: "偉大な王", note: "王碑文の定型句" },
+  // --- 神々 ---
+  { chars: "𒀭𒂗𒆠", translit: "ᵈen-ki",      meaning: "エンキ神（水と知恵の神）", note: "EN.KI=「大地の主」。先頭のANは限定符" },
+  { chars: "𒀭𒂗𒆤", translit: "ᵈen-lil₂",    meaning: "エンリル神（神々の王）", note: "EN.LIL₂=「風の主」" },
+  { chars: "𒀭𒈹",   translit: "ᵈinanna",     meaning: "女神イナンナ（愛と戦い）", note: "のちのイシュタル" },
+  // --- 家族 ---
+  { chars: "𒀀𒀀",   translit: "a-a",         meaning: "父" },
+  { chars: "𒂼𒈬",   translit: "ama-ĝu₁₀",    meaning: "わたしの母" },
+  { chars: "𒁮𒈬",   translit: "dam-ĝu₁₀",    meaning: "わたしの妻・夫" },
+  { chars: "𒌉𒈬",   translit: "dumu-ĝu₁₀",   meaning: "わたしの息子" },
+  // --- もの・生きもの ---
+  { chars: "𒌨𒈤",   translit: "ur-mah",      meaning: "ライオン", note: "直訳「堂々たる犬」" },
+  { chars: "𒆬𒌓",   translit: "ku₃-babbar",  meaning: "銀・お金", note: "「輝く白」。UDをbabbar（白い）と読む" },
+  { chars: "𒆬𒄀",   translit: "ku₃-sig₁₇",   meaning: "金", note: "GIをsig₁₇と読む" },
+  { chars: "𒊕𒆠",   translit: "sag-ki",      meaning: "ひたい・顔つき", note: "直訳「頭の場所」" },
+  // --- 文法の例 ---
+  { chars: "𒃲𒃲",   translit: "gal-gal",     meaning: "大きいものたち", note: "字を重ねて複数を表す" },
+  { chars: "𒀀𒋫",   translit: "a-ta",        meaning: "水から", note: "TA=「〜から」の使用例" },
+  { chars: "𒆳𒃲",   translit: "kur-gal",     meaning: "大いなる山", note: "エンリル神の称号" },
 ];
 
 // ---- 読む（習った字だけの短い句・称号）----
@@ -428,6 +466,47 @@ const SENTENCES = [
     trans: "王のもの",
     note: "アッカド語。印章などに刻まれた所有表示の形",
   },
+  {
+    words: [
+      { c: "𒈗",   t: "lugal", g: "王" },
+      { c: "𒃲",   t: "gal",   g: "大きい" },
+      { c: "𒈗",   t: "lugal", g: "王" },
+      { c: "𒆳𒆳", t: "kur-kur", g: "国々" },
+    ],
+    trans: "偉大な王、諸国の王",
+    note: "アッシリア王碑文の定型 šarru rabû šar mātāti を楔形のまま読む形",
+  },
+  {
+    words: [
+      { c: "𒀭𒂗𒆤", t: "ᵈen-lil₂", g: "エンリル神" },
+      { c: "𒆳𒃲",   t: "kur-gal",  g: "大いなる山" },
+    ],
+    trans: "エンリル、大いなる山",
+    note: "実際に使われたエンリルの称号",
+  },
+  {
+    words: [
+      { c: "𒇽",     t: "lu₂",      g: "人" },
+      { c: "𒆠𒂗𒄀", t: "ki-en-gi", g: "シュメール" },
+    ],
+    trans: "シュメールの人",
+  },
+  {
+    words: [
+      { c: "𒊭",   t: "ša",   g: "〜のもの" },
+      { c: "𒀭𒌓", t: "ᵈutu", g: "太陽神" },
+    ],
+    trans: "シャマシュ（太陽神）のもの",
+    note: "アッカド語。UDの神をアッカド語ではシャマシュと呼ぶ",
+  },
+  {
+    words: [
+      { c: "𒂍",     t: "e₂",       g: "家・神殿" },
+      { c: "𒀭𒂗𒆤", t: "ᵈen-lil₂", g: "エンリル神" },
+    ],
+    trans: "エンリルの神殿",
+    note: "実際の碑文では e₂ ᵈen-lil₂-la₂ と語尾がつく。ここでは簡略形",
+  },
 ];
 
 // ---- 定数 ----
@@ -440,7 +519,9 @@ const GHOST_FIT = 240;
 const TYPE_LABEL = {
   vertical: "縦楔",
   horizontal: "横楔",
-  oblique: "斜め楔",
+  oblique: "斜め楔（右下）",
+  oblique_up: "斜め楔（右上）",
+  oblique_dl: "斜め楔（左下）",
   winkelhaken: "ウィンケルハーケン",
 };
 
@@ -520,7 +601,7 @@ function practiceWord(word) {
 function renderCard() {
   if (!currentSign) {
     cardEl.innerHTML = `<div class="info"><div class="rd">自由練習</div>
-      <div>ドラッグ=楔を打つ（左→右 / 上→下 / 左上→右下）・タップ=ウィンケルハーケン。上の字を選ぶと練習モードになります。</div></div>`;
+      <div>ドラッグ=楔を打つ（左→右 / 上→下 / 斜めは右下・右上・左下）・タップ=ウィンケルハーケン。上の字を選ぶと練習モードになります。</div></div>`;
     return;
   }
   const s = currentSign;
@@ -558,7 +639,9 @@ function classify(dx, dy, len) {
   if (angle >= -22.5 && angle < 22.5) return "horizontal";
   if (angle >= 22.5 && angle < 67.5) return "oblique";
   if (angle >= 67.5 && angle <= 112.5) return "vertical";
-  return null; // 右→左・下→上などは葦ペンでは打てない方向
+  if (angle >= -67.5 && angle < -22.5) return "oblique_up"; // AN(𒀭)などの星形に必要
+  if (angle > 112.5 && angle <= 157.5) return "oblique_dl"; // 右上→左下。SAG(𒊕)などに必要
+  return null; // 右→左・上方向は葦ペンでは打てない
 }
 
 // ---- 描画（三角形の頭 + 先細りの尾）----
@@ -682,7 +765,7 @@ function endDrag(e) {
   const type = classify(dx, dy, len);
 
   if (!type) {
-    showWarn("⚠ 楔は 左→右・上→下・左上→右下 にしか打てません");
+    showWarn("⚠ 右→左（真横）・上方向には打てません");
     return;
   }
 
@@ -806,6 +889,8 @@ function buildWedgeDemos() {
     { type: "horizontal",  label: "横楔（左→右）",   wx: [16, 30, 84, 30], ax: [16, 52, 84, 52] },
     { type: "vertical",    label: "縦楔（上→下）",   wx: [42, 10, 42, 60], ax: [62, 10, 62, 60] },
     { type: "oblique",     label: "斜め楔（左上→右下）", wx: [24, 10, 74, 52], ax: [36, 4, 86, 46] },
+    { type: "oblique_up",  label: "斜め楔（左下→右上）", wx: [24, 52, 74, 10], ax: [36, 58, 86, 16] },
+    { type: "oblique_dl",  label: "斜め楔（右上→左下）", wx: [74, 10, 24, 52], ax: [86, 16, 36, 58] },
     { type: "winkelhaken", label: "ウィンケルハーケン（タップ）", wx: [44, 32, 44, 32], ax: null },
   ];
   for (const d of demos) {
