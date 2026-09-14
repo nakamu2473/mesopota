@@ -390,11 +390,35 @@ const SIGNS = [
   { char: "𒄞", cp: "U+1211E", name: "GUD",   reading: "gu₄",        meaning: "牛" },
   { char: "𒆤", cp: "U+121A4", name: "KID",   reading: "kid / lil₂", meaning: "風(lil₂)。エンリル(EN.LIL₂)の後半の字" },
   { char: "𒈹", cp: "U+12239", name: "MUŠ₃",  reading: "muš₃ / inanna", meaning: "女神イナンナを表す字" },
+  // --- 数と単位（行政文書用）---
+  { char: "𒐕", cp: "U+12415", name: "GEŠ₂",  reading: "geš₂",       meaning: "数の「60」。60進法の位。1と同じ縦楔を大きく書く", uname: "CUNEIFORM NUMERIC SIGN ONE GESH2" },
+  { char: "𒄥", cp: "U+12125", name: "GUR",   reading: "gur",        meaning: "容量の大単位グル（約300リットル）" },
+  { char: "𒑏", cp: "U+1244F", name: "BAN₂",  reading: "ban₂",       meaning: "容量単位バン（約10リットル）", uname: "CUNEIFORM NUMERIC SIGN ONE BAN2" },
+  { char: "𒋡", cp: "U+122E1", name: "SILA₃", reading: "sila₃",      meaning: "容量単位シラ（約1リットル）。配給記録に頻出" },
+  // --- 品物 ---
+  { char: "𒇻", cp: "U+121FB", name: "LU",    reading: "udu / lu",   meaning: "羊。行政文書ではuduと読むことが多い" },
+  { char: "𒈧", cp: "U+12227", name: "MAŠ₂",  reading: "maš₂",       meaning: "子ヤギ。「利子」の意味でも使う" },
+  { char: "𒁉", cp: "U+12049", name: "BI",    reading: "bi / kaš",   meaning: "ビール（kaš）。音節「ビ」" },
+  { char: "𒃻", cp: "U+120FB", name: "GAR",   reading: "gar / ninda", meaning: "パン・食べ物（ninda）" },
+  { char: "𒌆", cp: "U+12306", name: "TUG₂",  reading: "tug₂",       meaning: "布・衣服" },
+  { char: "𒋠", cp: "U+122E0", name: "SIK₂",  reading: "siki",       meaning: "羊毛" },
+  // --- 定型句・日付の字 ---
+  { char: "𒄊", cp: "U+1210A", name: "GIR₃",  reading: "giri₃",      meaning: "足。「〜を介して」（運搬担当者）", uname: "CUNEIFORM SIGN GIR3" },
+  { char: "𒋃", cp: "U+122C3", name: "ŠID",   reading: "šid / kišib₃", meaning: "数える。kišib₃=印章・封印" },
+  { char: "𒍣", cp: "U+12363", name: "ZI",    reading: "zi",         meaning: "命・息。zi-ga=支出" },
+  { char: "𒂵", cp: "U+120B5", name: "GA",    reading: "ga",         meaning: "ミルク。音節「ガ」" },
+  { char: "𒌗", cp: "U+12317", name: "ITI",   reading: "iti",        meaning: "月（暦月）。UDの中にウィンケルハーケン3つ", uname: "CUNEIFORM SIGN UD TIMES U PLUS U PLUS U" },
+  // --- 役職の字 ---
+  { char: "𒉺", cp: "U+1227A", name: "PA",    reading: "pa",         meaning: "枝・杖。SIPA（羊飼い）やENSI₂の構成字" },
+  { char: "𒋼", cp: "U+122FC", name: "TE",    reading: "te",         meaning: "音節「テ」。ENSI₂（州知事）の構成字" },
+  { char: "𒋛", cp: "U+122DB", name: "SI",    reading: "si",         meaning: "角（つの）。ENSI₂の構成字" },
+  { char: "𒁾", cp: "U+1207E", name: "DUB",   reading: "dub",        meaning: "粘土板。DUB.SAR=書記" },
+  { char: "𒊬", cp: "U+122AC", name: "SAR",   reading: "sar",        meaning: "書く・庭" },
 ];
 
 // ---- 単語帳（出題35字だけで書ける実在の語）----
 const WORDS = [
-  { chars: "𒀭𒆠",   translit: "an-ki",       meaning: "天と地・宇宙" },
+  { sec: "基本の語", chars: "𒀭𒆠", translit: "an-ki", meaning: "天と地・宇宙" },
   { chars: "𒂍𒃲",   translit: "e₂-gal",      meaning: "宮殿", note: "直訳「大きい家」。ヘブライ語 hēkhāl（神殿）の語源" },
   { chars: "𒂍𒈬",   translit: "e₂-ĝu₁₀",     meaning: "わたしの家", note: "MUが所有語尾「私の」を表す" },
   { chars: "𒆠𒂗𒄀", translit: "ki-en-gi",    meaning: "シュメール", note: "シュメール人が自分の国を呼んだ名" },
@@ -405,23 +429,59 @@ const WORDS = [
   { chars: "𒀀𒈾",   translit: "a-na",        meaning: "なに？（疑問詞）", note: "アッカド語では ana「〜へ」" },
   { chars: "𒈗𒃲",   translit: "lugal gal",   meaning: "偉大な王", note: "王碑文の定型句" },
   // --- 神々 ---
-  { chars: "𒀭𒂗𒆠", translit: "ᵈen-ki",      meaning: "エンキ神（水と知恵の神）", note: "EN.KI=「大地の主」。先頭のANは限定符" },
+  { sec: "神々", chars: "𒀭𒂗𒆠", translit: "ᵈen-ki", meaning: "エンキ神（水と知恵の神）", note: "EN.KI=「大地の主」。先頭のANは限定符" },
   { chars: "𒀭𒂗𒆤", translit: "ᵈen-lil₂",    meaning: "エンリル神（神々の王）", note: "EN.LIL₂=「風の主」" },
   { chars: "𒀭𒈹",   translit: "ᵈinanna",     meaning: "女神イナンナ（愛と戦い）", note: "のちのイシュタル" },
   // --- 家族 ---
-  { chars: "𒀀𒀀",   translit: "a-a",         meaning: "父" },
+  { sec: "家族", chars: "𒀀𒀀", translit: "a-a", meaning: "父" },
   { chars: "𒂼𒈬",   translit: "ama-ĝu₁₀",    meaning: "わたしの母" },
   { chars: "𒁮𒈬",   translit: "dam-ĝu₁₀",    meaning: "わたしの妻・夫" },
   { chars: "𒌉𒈬",   translit: "dumu-ĝu₁₀",   meaning: "わたしの息子" },
   // --- もの・生きもの ---
-  { chars: "𒌨𒈤",   translit: "ur-mah",      meaning: "ライオン", note: "直訳「堂々たる犬」" },
+  { sec: "もの・生きもの", chars: "𒌨𒈤", translit: "ur-mah", meaning: "ライオン", note: "直訳「堂々たる犬」" },
   { chars: "𒆬𒌓",   translit: "ku₃-babbar",  meaning: "銀・お金", note: "「輝く白」。UDをbabbar（白い）と読む" },
   { chars: "𒆬𒄀",   translit: "ku₃-sig₁₇",   meaning: "金", note: "GIをsig₁₇と読む" },
   { chars: "𒊕𒆠",   translit: "sag-ki",      meaning: "ひたい・顔つき", note: "直訳「頭の場所」" },
   // --- 文法の例 ---
-  { chars: "𒃲𒃲",   translit: "gal-gal",     meaning: "大きいものたち", note: "字を重ねて複数を表す" },
+  { sec: "文法の例", chars: "𒃲𒃲", translit: "gal-gal", meaning: "大きいものたち", note: "字を重ねて複数を表す" },
   { chars: "𒀀𒋫",   translit: "a-ta",        meaning: "水から", note: "TA=「〜から」の使用例" },
   { chars: "𒆳𒃲",   translit: "kur-gal",     meaning: "大いなる山", note: "エンリル神の称号" },
+  // --- 行政文書: 数と単位 ---
+  { sec: "数と単位（行政文書の最頻出）", chars: "𒁹", translit: "diš", meaning: "1", note: "縦のくさび1本。数えたいだけ打つ" },
+  { chars: "𒌋",   translit: "u",       meaning: "10", note: "ウィンケルハーケン1つ" },
+  { chars: "𒐕",   translit: "geš₂",    meaning: "60", note: "シュメールは60進法。1と同じ縦楔をひとまわり大きく書く" },
+  { chars: "𒄥",   translit: "gur",     meaning: "グル（容量の大単位・約300L）", note: "「še 3 gur=大麦3グル」のように穀物の量で頻出" },
+  { chars: "𒑏",   translit: "ban₂",    meaning: "バン（約10L）" },
+  { chars: "𒋡",   translit: "sila₃",   meaning: "シラ（約1L）", note: "ビールやパンの配給量の単位" },
+  // --- 行政文書: 品物 ---
+  { sec: "品物", chars: "𒊺", translit: "še", meaning: "大麦", note: "行政文書でいちばん出てくる品物" },
+  { chars: "𒇻",   translit: "udu",     meaning: "羊" },
+  { chars: "𒄞",   translit: "gu₄",     meaning: "牛" },
+  { chars: "𒈧",   translit: "maš₂",    meaning: "子ヤギ", note: "「利子」の意味でも使う" },
+  { chars: "𒉌",   translit: "i₃",      meaning: "油", note: "NIの字をi₃と読む" },
+  { chars: "𒁉",   translit: "kaš",     meaning: "ビール", note: "BIの字をkašと読む" },
+  { chars: "𒃻",   translit: "ninda",   meaning: "パン", note: "GARの字をnindaと読む" },
+  { chars: "𒌆",   translit: "tug₂",    meaning: "布・衣服" },
+  { chars: "𒋠",   translit: "siki",    meaning: "羊毛" },
+  // --- 行政文書: 定型句 ---
+  { sec: "定型句（ここが読めると「文」になる）", chars: "𒋗𒁀𒋾", translit: "šu ba-ti", meaning: "受け取った", note: "受領文書の締めの定型句。ŠU（手）+BA+TIの3記号セット" },
+  { chars: "𒈬𒁺",  translit: "mu-kux(DU)", meaning: "納入", note: "搬入記録の見出し語。DUの字をkuxと読む特殊用法" },
+  { chars: "𒆠𒋫",  translit: "ki 〜 -ta", meaning: "〜から", note: "kiと-taで人名をはさむ。ki lugal-ta=王から" },
+  { chars: "𒄊",   translit: "giri₃",   meaning: "〜を介して（担当者）", note: "直訳「足」。運搬担当者の名前の前に置く" },
+  { chars: "𒋃",   translit: "kišib₃",  meaning: "〜の印", note: "ŠIDの字をkišib₃と読む。印章を押した責任者を示す" },
+  { chars: "𒍣𒂵",  translit: "zi-ga",   meaning: "支出", note: "倉から出ていった分の見出し語" },
+  { chars: "𒁀𒍣",  translit: "ba-zi",   meaning: "支出された", note: "動詞形。zi-gaと対で覚える" },
+  // --- 行政文書: 日付 ---
+  { sec: "日付", chars: "𒌗", translit: "iti", meaning: "月", note: "後ろに月名が続く。iti=UDの中にウィンケルハーケン3つ" },
+  { chars: "𒈬",   translit: "mu",      meaning: "年", note: "後ろに年名（その年の出来事の名前）が続く" },
+  { chars: "𒌓",   translit: "u₄",      meaning: "日", note: "u₄ 15-kam=15日" },
+  // --- 行政文書: 人・役職 ---
+  { sec: "人・役職", chars: "𒈗", translit: "lugal", meaning: "王" },
+  { chars: "𒉺𒋼𒋛", translit: "ensi₂",  meaning: "州知事", note: "PA.TE.SIの3字で書く" },
+  { chars: "𒌉",   translit: "dumu",    meaning: "息子", note: "「PN dumu PN₂」=〜の息子、と系譜を書く" },
+  { chars: "𒁮",   translit: "dam",     meaning: "妻・配偶者" },
+  { chars: "𒉺𒇻",  translit: "sipa",    meaning: "羊飼い", note: "PA.LUの2字で書く" },
+  { chars: "𒁾𒊬",  translit: "dub-sar", meaning: "書記", note: "直訳「板を書く人」。粘土板の最後によく署名している" },
 ];
 
 // ---- 読む（習った字だけの短い句・称号）----
@@ -606,7 +666,7 @@ function renderCard() {
   }
   const s = currentSign;
   const uni = s.cp
-    ? `<div class="uni">${s.cp} CUNEIFORM SIGN ${s.name.replace(/Š/g, "SH").replace(/₂/g, "2")}</div>`
+    ? `<div class="uni">${s.cp} ${s.uname || "CUNEIFORM SIGN " + s.name.replace(/Š/g, "SH").replace(/₂/g, "2").replace(/₃/g, "3")}</div>`
     : "";
   cardEl.innerHTML = `
     <div class="glyph">${s.char}</div>
@@ -814,7 +874,7 @@ btnSave.addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(glyph, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  const label = currentSign ? currentSign.name.replace(/₂/g, "2").replace(/[^\w-]/g, "_") : "free";
+  const label = currentSign ? currentSign.name.replace(/₂/g, "2").replace(/₃/g, "3").replace(/[^\w-]/g, "_") : "free";
   a.download = `glyph-${label}-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
@@ -944,6 +1004,11 @@ function buildWordCards() {
   const wrap = document.getElementById("word-cards");
   wrap.className = "panel";
   for (const w of WORDS) {
+    if (w.sec) {
+      const h = document.createElement("h2");
+      h.textContent = w.sec;
+      wrap.appendChild(h);
+    }
     const card = document.createElement("div");
     card.className = "fcard";
     card.innerHTML = `<span class="tap-hint">タップで答え</span><div class="q">${w.chars}</div>`;
